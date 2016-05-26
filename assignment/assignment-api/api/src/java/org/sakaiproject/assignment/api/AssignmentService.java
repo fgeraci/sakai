@@ -26,7 +26,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.sakaiproject.rubrics.api.rubric.Rubric;
+import org.sakaiproject.rubrics.api.rubric.RubricGrade;
 import org.sakaiproject.entity.api.EntityProducer;
 import org.sakaiproject.exception.IdInvalidException;
 import org.sakaiproject.exception.IdUnusedException;
@@ -932,4 +935,38 @@ public interface AssignmentService extends EntityProducer
 	 * Params: AssignmentSubmission s
 	 */
 	public boolean hasBeenSubmitted(AssignmentSubmission s);
+	
+	/**
+	 * Returns a default pre-populated list of predefined rubrics
+	 * @return
+	 */
+	List<Rubric> getPredefinedRubrics(final String pUserId);
+	
+	/**
+	 * Saves a rubric in DB
+	 * @param pRubric
+	 */
+	void saveRubric(Rubric pRubric) throws Exception;
+	
+	/**
+	 * Returns a Rubric instance by is unique identifier number.
+	 * @param pId
+	 * @return Rubric instance or null
+	 */
+	Rubric getRubricById(Long pId);
+	
+	
+	/**
+	 * Saves a RubricGrade set to DB associated to a specific submission identifier
+	 * @param rubricGradeSet
+	 * @param submissionId
+	 */
+	void saveRubricGradeSet(Set<RubricGrade> rubricGradeSet, String submissionId) throws Exception;
+	
+	/**
+	 * Retrieves marked graded cells associated to a submission id 
+	 * @param submissionId
+	 * @return
+	 */
+	List<RubricGrade> getRubricGradesBySubmission(String submissionId);
 }

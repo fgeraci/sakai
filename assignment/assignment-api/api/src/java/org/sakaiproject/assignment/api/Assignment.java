@@ -346,6 +346,18 @@ public interface Assignment extends Entity, Comparable
 	 */
 	public boolean isPeerAssessmentClosed();
 
+	/**
+	 * Sets the id of the rubric associated with this instance of the assignment
+	 * @param pRubricId
+	 */
+	public void setRubricId(final Long pRubricId);
+	
+	/**
+	 * Retrieves the rubric id associated with this assignment
+	 * @return
+	 */
+	public Long getRubricId();
+	
 
 	/**
 	 * <p>

@@ -3,6 +3,7 @@
 <%@ taglib uri="http://java.sun.com/jsf/core" prefix="f" %>
 <%@ taglib uri="http://www.sakaiproject.org/samigo" prefix="samigo" %>
 <%@ taglib uri="http://java.sun.com/upload" prefix="corejsf" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html
      PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -491,11 +492,15 @@ document.links[newindex].onclick();
            <f:subview id="deliverShortAnswer">
            <%@ include file="/jsf/delivery/item/deliverShortAnswer.jsp" %>
            </f:subview>
-          </h:panelGroup>
-          <h:panelGroup rendered="#{question.itemData.typeId == 4}">
-           <f:subview id="deliverTrueFalse">
-           <%@ include file="/jsf/delivery/item/deliverTrueFalse.jsp" %>
-           </f:subview>
+          		<h:panelGroup rendered="#{not empty question.rubricData}">
+	            	<div class="rubricContainer">
+	      				<h:inputHidden id="rubricGradingDataProxy" value="#{question.rubricGradingData}" /> 
+	      				<input type="hidden" id="rubricGradeData" name="rubricGradeData"/> 
+	                    <div id="hasCommentCell" style="display:none"><h:outputText value="#{question.rubricCommentsCells}" escape="false" /></div>
+	                    <button type="button" class="rubDisplayButton"/>Show Rubric</button>
+	                    <h:outputText value="#{question.rubricData}" escape="false" /> 
+                    </div>
+				</h:panelGroup>
            </h:panelGroup>
            
            <h:panelGroup rendered="#{question.itemData.typeId == 13}">
@@ -513,6 +518,11 @@ document.links[newindex].onclick();
     </h:column>
   </h:dataTable>
   </div>
+  
+<!-- Rutgers - Rubric addition  -->
+		 <%@ include file="/jsf/rubrics/feedbackRubric.jsp" %>
+<!-- end -->
+  
 </h:panelGroup>
 
   <f:verbatim><br/></f:verbatim>

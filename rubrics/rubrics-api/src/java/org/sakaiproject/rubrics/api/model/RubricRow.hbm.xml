@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping
+    PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping auto-import="false" >
+	<class name="org.sakaiproject.rubrics.api.rubric.RubricRow"
+		table="RUBRIC_ROW_T">
+		<id name="rowId" column="ROW_ID" type="long">
+			<generator class="native">
+				<param name="sequence">RUBRIC_ROW_S</param>
+			</generator>
+		</id>
+
+		<many-to-one name="rubric" column="RUBRIC_ID"
+			class="org.sakaiproject.rubrics.api.rubric.Rubric" not-null="true"
+			index="ROW_RUBRIC_I" />
+
+		<property name="sequence" type="integer">
+			<column name="SEQUENCE" not-null="true" />
+		</property>
+		<property name="rowText" type="java.lang.String">
+			<column name="row_TEXT" not-null="true" length="4000" />
+		</property>
+		<property name="removed" type="boolean">
+			<column name="REMOVED" />
+		</property>
+		<set name="cellSet" table="RUBRIC_CELL_T" cascade="none" inverse="true"
+			order-by="COLUMN_SEQUENCE asc">
+			<key column="ROW_ID" />
+			<one-to-many class="org.sakaiproject.rubrics.api.rubric.RubricCell" />
+		</set>
+	</class>
+</hibernate-mapping>
+       

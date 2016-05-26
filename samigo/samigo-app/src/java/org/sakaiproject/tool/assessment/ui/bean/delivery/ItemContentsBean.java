@@ -36,7 +36,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math.util.MathUtils;
+import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.event.cover.EventTrackingService;
+import org.sakaiproject.rubrics.api.rubric.RubricsService;
 import org.sakaiproject.tool.assessment.data.dao.grading.ItemGradingData;
 import org.sakaiproject.tool.assessment.data.dao.grading.MediaData;
 import org.sakaiproject.tool.assessment.data.ifc.assessment.AnswerIfc;
@@ -105,6 +107,16 @@ public class ItemContentsBean implements Serializable {
 	private String instruction;
 
 	private String rationale;
+	
+	/* Rutgers - Rubrics bean fields */
+	private String rubricData;
+	
+	private String rubricGradingData;
+	
+	private String rubricCommentsCells;
+	
+	private boolean rubricDisplayToStudents;
+	/* end */
 
 	private List matchingArray;
 
@@ -169,6 +181,10 @@ public class ItemContentsBean implements Serializable {
 	private boolean addComment;
 	private String studentComment;
 	
+	/* Rutgers - Add rubrics service */
+	RubricsService rubricsService = (RubricsService) ComponentManager.get("org.sakaiproject.rubrics.api.rubric.RubricsService");
+	/* end */
+	
 	private String imageSrc = "";
 
 	public ItemContentsBean() {
@@ -176,7 +192,7 @@ public class ItemContentsBean implements Serializable {
 
 	// added by daisyf on 11/22/04
 	public ItemContentsBean(ItemDataIfc itemData) {
-		this.itemData = itemData;
+		this.setItemData(itemData);
 		setInstruction(this.itemData.getInstruction());
 		Integer sequence = this.itemData.getSequence();
 		if (sequence != null) {
@@ -217,6 +233,38 @@ public class ItemContentsBean implements Serializable {
 
 		return text;
 	}
+	
+	/**
+	 * Retrieves rubric data if available
+	 * @return
+	 */
+	public String getRubricData() {
+		return this.rubricData;
+	}
+	
+	/**
+	 * Sets rubric data
+	 * @param pRubricData
+	 */
+	public void setRubricData(String pRubricData) {
+		this.rubricData = pRubricData;
+	}
+	
+	public void setRubricDisplayToStudents(boolean pVal) {
+		this.rubricDisplayToStudents = pVal;
+	}
+	
+	public boolean getRubricDisplayToStudents() {
+		return this.rubricDisplayToStudents;
+	}
+	
+	public void setRubricCommentsCells(String pVal) {
+		this.rubricCommentsCells = pVal;
+	}
+	
+	public String getRubricCommentsCells() {
+		return this.rubricCommentsCells;
+	}
 
 	/**
 	 * This strips text of tags for the table of contents.
@@ -226,6 +274,32 @@ public class ItemContentsBean implements Serializable {
 
 	}
 
+	/**
+	 * Associates a rubric grading set with the specific item id.
+	 * @return
+	 */
+	public String getRubricGradingData() {
+		return this.rubricGradingData;
+	}
+	
+	/** 
+	 * This indicates, for a specific rubric, which cells were selected for grading
+	 * @param pVal
+	 */
+	public void setRubricGradingData(String pVal) {
+		this.rubricGradingData = pVal;
+		/* Rutgers - Rubrics - Finally, make grading data persistent if available for the rubric */
+        try {
+			if(pVal != null && !pVal.isEmpty()) {
+	      	  rubricsService.processRubricGradingData(this.getRubricGradingData(), 
+	      			  rubricsService.getRubricIdByItemId(	this.getItemData().getItemId(),
+	      					  								org.sakaiproject.tool.cover.ToolManager.getCurrentTool().getId()),
+	      			  this.getItemGradingIdForFilePicker());
+	        }
+        } catch (Exception e) { System.out.println("ItemContentsBean: Failed to set rubric grading data for item: " + this.getItemGradingIdForFilePicker()); }
+        /* end */
+	}
+	
 	public boolean getModelAnswerIsNotEmpty() {
 		String k = getKey();
 		if (k != null)
@@ -523,6 +597,17 @@ public class ItemContentsBean implements Serializable {
 	 */
 	public void setItemData(ItemDataIfc itemData) {
 		this.itemData = itemData;
+		/* Rutgers - Rubrics - set up rubric in bean, if available */
+		try {
+			Long rubId = rubricsService.getRubricIdByItemId(itemData.getItemId(),org.sakaiproject.tool.cover.ToolManager.getCurrentTool().getId());
+			if(rubId != null) {
+				this.setRubricData(rubricsService.buildRubricHTMLTable(rubricsService.getRubricById(rubId), false, itemData.getScore() == null ? 0 : itemData.getScore()));
+				this.setRubricCommentsCells(rubricsService.getCommentsCells(rubId));
+			}
+		} catch (Exception e) {
+			System.out.println("Failed to populate ItemContentsBean: " + this.getItemData().getItemId());
+		}
+		/* end */
 	}
 
 	/**
@@ -1486,6 +1571,8 @@ public class ItemContentsBean implements Serializable {
   public void setItemGradingIdForFilePicker(Long itemGradingIdForFilePicker)
   {
 	  this.itemGradingIdForFilePicker = itemGradingIdForFilePicker;
+	  String gradingData = rubricsService.getRubricGradingDataString(String.valueOf(itemGradingIdForFilePicker));
+	  this.setRubricGradingData(gradingData);
   }
   
   public String getLeadInText() {

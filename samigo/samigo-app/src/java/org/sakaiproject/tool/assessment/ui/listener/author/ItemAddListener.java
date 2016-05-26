@@ -42,7 +42,9 @@ import javax.faces.event.ActionListener;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.event.cover.EventTrackingService;
+import org.sakaiproject.rubrics.api.rubric.RubricsService;
 import org.sakaiproject.tool.assessment.data.dao.assessment.Answer;
 import org.sakaiproject.tool.assessment.data.dao.assessment.AnswerFeedback;
 import org.sakaiproject.tool.assessment.data.dao.assessment.ItemMetaData;
@@ -295,6 +297,17 @@ public class ItemAddListener
     }
 	try {
 		saveItem(itemauthorbean);
+		/* Rutgers - Rubric - For newly created items, handle rubric here now that they have an id assigned to them */
+		  try {
+			  if(itemauthorbean.getItemId() != null && item.getExistingRubricData() != null) {
+				  RubricsService rubricsService = (RubricsService) ComponentManager.get("org.sakaiproject.rubrics.api.rubric.RubricsService");
+				  rubricsService.saveNewRubricWithItem(
+						  	item.getExistingRubricData(), 
+							Long.valueOf(itemauthorbean.getItemId()), 
+							org.sakaiproject.tool.cover.ToolManager.getCurrentTool().getId());
+			  }
+		  } catch (Exception e) { System.out.println("ItemBean: failed at making Rubric Data persistent for item " + itemauthorbean.getItemId()); };
+		/* end */
 	}
 	catch (FinFormatException e) {
 		err=ContextUtil.getLocalizedString("org.sakaiproject.tool.assessment.bundle.AuthorMessages","fin_invalid_characters_error");

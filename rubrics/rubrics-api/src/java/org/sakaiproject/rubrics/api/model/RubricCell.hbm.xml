@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping
+    PUBLIC "-//Hibernate/Hibernate Mapping DTD//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping auto-import="false" >
+	<class name="org.sakaiproject.rubrics.api.rubric.RubricCell"
+		table="RUBRIC_CELL_T">
+		<id name="cellId" column="CELL_ID" type="long">
+			<generator class="native">
+				<param name="sequence">RUBRIC_CELL_S</param>
+			</generator>
+		</id>
+
+		<many-to-one name="row" column="ROW_ID"
+			class="org.sakaiproject.rubrics.api.rubric.RubricRow" not-null="true"
+			lazy="false" index="RUBRIC_CELL_ROW_I" />
+
+		<many-to-one name="rubric" column="RUBRIC_ID"
+			class="org.sakaiproject.rubrics.api.rubric.Rubric" not-null="true"
+			lazy="false" index="RUBRIC_CELL_RUBRIC_I" />
+
+		<property name="columnText" type="java.lang.String">
+			<column name="COLUMN_TEXT" not-null="true" length="255" />
+		</property>
+		<property name="columnWeight" type="integer">
+			<column name="COLUMN_WEIGHT" not-null="true" default="0" />
+		</property>
+		<property name="cellText" type="java.lang.String">
+			<column name="CELL_TEXT" not-null="false" length="4000" />
+		</property>
+		<property name="cellType" type="java.lang.String">
+			<column name="CELL_TYPE" not-null="false" />
+		</property>
+		<property name="columnSequence" type="integer">
+			<column name="COLUMN_SEQUENCE" not-null="true" />
+		</property>
+
+
+	</class>
+</hibernate-mapping>
+			

@@ -47,6 +47,11 @@
         <artifactId>sakai-assignment-bundles</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+      	<groupId>org.sakaiproject.rubrics</groupId>
+  		<artifactId>rubrics-api</artifactId>
+  		<version>11-SNAPSHOT</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

@@ -90,6 +90,11 @@ import org.sakaiproject.assignment.api.model.AssignmentSupplementItemAttachment;
 import org.sakaiproject.assignment.api.model.AssignmentSupplementItemService;
 import org.sakaiproject.assignment.api.model.AssignmentSupplementItemWithAttachment;
 import org.sakaiproject.assignment.api.model.PeerAssessmentItem;
+import org.sakaiproject.rubrics.api.rubric.Rubric;
+import org.sakaiproject.rubrics.api.rubric.RubricCell;
+import org.sakaiproject.rubrics.api.rubric.RubricGrade;
+import org.sakaiproject.rubrics.api.rubric.RubricRow;
+import org.sakaiproject.rubrics.api.rubric.RubricsService;
 import org.sakaiproject.assignment.api.model.PeerAssessmentAttachment;
 import org.sakaiproject.assignment.cover.AssignmentService;
 import org.sakaiproject.assignment.taggable.api.AssignmentActivityProducer;
@@ -2495,6 +2500,52 @@ public class AssignmentAction extends PagedResourceActionII
 		context.put("name_NEW_ASSIGNMENT_REVIEW_SERVICE_EXCLUDE_TYPE", NEW_ASSIGNMENT_REVIEW_SERVICE_EXCLUDE_TYPE);
 		context.put("name_NEW_ASSIGNMENT_REVIEW_SERVICE_EXCLUDE_VALUE", NEW_ASSIGNMENT_REVIEW_SERVICE_EXCLUDE_VALUE);
 		
+		/*
+		 * ADD FOR RUBRIC
+		 */
+		
+		context.put("rubricData", RubricsService.RUBRIC_DATA);
+		context.put("name_SELECT_ADD_NO_RUBRIC", RubricsService.ADD_NO_RUBRIC );
+		context.put("name_SELECT_ADD_NEW_RUBRIC", RubricsService.ADD_NEW_RUBRIC);
+		context.put("name_SELECT_ADD_PREDEFINED_RUBRIC", RubricsService.ADD_PREDEFINED_RUBRIC);
+		context.put("input_rubricId",RubricsService.INPUT_RUBRIC_ID);
+		List<Rubric> rubricList = null;
+		
+		try {
+			rubricList = AssignmentService.getPredefinedRubrics(SessionManager.getCurrentSessionUserId());
+		} catch (Exception e) {
+			System.out.println("Failed in loading predefined rubrics");
+		}
+		
+		/* Rubric */
+		
+		String prefefinedRubrics = "";
+    	String rubric_delimeters[]= {RubricsService.RUBRIC_DELIMETERS1, RubricsService.RUBRIC_DELIMETERS2};
+    	for (Rubric rubric : rubricList){
+    		prefefinedRubrics+="["+rubric.getRubricId().toString()+"][title]"+rubric_delimeters[1]+ rubric.getTitle()+rubric_delimeters[0];
+    		prefefinedRubrics+="["+rubric.getRubricId().toString()+"][description]"+rubric_delimeters[1]+ rubric.getDescription()+rubric_delimeters[0];
+    		prefefinedRubrics+="["+rubric.getRubricId().toString()+"][icon]"+rubric_delimeters[1]+rubric.getIcon()+rubric_delimeters[0];
+    		List<RubricRow> rubricRows = new ArrayList<RubricRow>(rubric.getRubricRowSet());
+    		RubricRow row=rubricRows.get(0);
+    		List <RubricCell> cellSet = new ArrayList <RubricCell>(row.getCellSet());
+    		ArrayList<String> rubric_columns = new ArrayList<String>((int)cellSet.size()+1);
+			for(RubricCell cell : cellSet){
+				prefefinedRubrics+="["+rubric.getRubricId().toString()+"]["+cell.getColumnSequence()+"][0]"+rubric_delimeters[1]+ cell.getColumnText()+rubric_delimeters[0];
+				rubric_columns.add(cell.getColumnText());
+			}
+    		for(RubricRow currentRow : rubricRows){
+    			prefefinedRubrics+="["+rubric.getRubricId().toString()+"][0]["+currentRow.getSequence()+"]"+rubric_delimeters[1]+ currentRow.getRowText()+rubric_delimeters[0];
+			cellSet = new ArrayList <RubricCell>(currentRow.getCellSet());
+			for(RubricCell cell : cellSet){
+				long RowId = cell.getRow().getRowId();
+				prefefinedRubrics+="["+rubric.getRubricId().toString()+"]["+(cell.getColumnSequence())+"]["+currentRow.getSequence()+"]"+rubric_delimeters[1]+ cell.getCellText()+rubric_delimeters[0];
+			}
+    		}
+    	}
+    	
+    	context.put("predefined_rubrics", prefefinedRubrics);
+		
+		/* --- */
 		
 		context.put("name_title", NEW_ASSIGNMENT_TITLE);
 		context.put("name_order", NEW_ASSIGNMENT_ORDER);
@@ -5485,9 +5536,167 @@ public class AssignmentAction extends PagedResourceActionII
                     lrss.registerStatement(getStatementForViewAssignment(lrss.getEventActor(event), event, a.getTitle()), "assignment");
                 }
 			}
+			
+			Long rubricId = a.getRubricId();
+			if(rubricId != null) {
+				state.setAttribute(RubricsService.RUBRIC_AVAILABLE, Boolean.TRUE);
+				boolean hasCommentColumn = false;
+				String commentCells = "";
+				Rubric rubric = AssignmentService.getRubricById(rubricId);
+				state.setAttribute(RubricsService.RUBRIC_TITLE, rubric.getTitle());
+				state.setAttribute(RubricsService.RUBRIC_HTML_TABLE, buildRubricHTMLTable(state, rubric,false, a));
+				if(submission != null) {
+					String existingGradingData = getRubricGradingDataString(submission.getId());
+					if(existingGradingData.length() > 0) state.setAttribute(RubricsService.EXISTING_RUBRIC, existingGradingData);
+				}
+			}
 		}
-
 	} // doView_submission
+	
+	private String buildRubricHTMLTable(SessionState state, Rubric rubric, boolean pWithFeedback, Assignment a) {
+		boolean calcPoints = false;
+		double totalPoints = 0;
+		try {
+			totalPoints = Double.parseDouble(a.getContent().getMaxGradePointDisplay());
+			calcPoints = totalPoints > 0;
+		} catch (Exception e) { System.out.println("Failed at parsing total points"); }
+		boolean hasCommentColumn = false;
+		boolean hasGradingRow = false , isDataRow = false;
+		int totalCols = 1, totalRows = 1;
+		double[] colWeights, rowWeights;
+		String commentsCells = "";
+		String rubricTable = "";
+		List<RubricRow> rubricRows = new ArrayList<RubricRow>(rubric.getRubricRowSet());
+		// grading weights data
+		{
+			totalCols += rubricRows.get(0).getCellSet().size(); 
+			totalRows = rubricRows.size();
+			colWeights = new double[totalCols];
+			rowWeights = new double[totalRows];
+		}
+		int row = 0;
+		List<RubricCell> headerCells = new ArrayList<RubricCell>(rubricRows.get(0).getCellSet());
+		int cell = 0; 
+		rubricTable += "<tr>";
+		// set the icon, if any
+		if(rubric.getIcon() == null) {
+			rubricTable += "<th></th>";
+		} else {
+			rubricTable += 	"<th><div><img src=\""+
+					rubric.getIcon()+
+					"\" width=\"150px\" height=\"150px\" style=\"display: block;margin-left: auto;margin-right: auto;\" alt=\"rubric icon\"></div></th>";
+		}
+		// build the header row
+		int col = 0;
+		for(RubricCell c : headerCells) {
+			if(c.getCellType().equals(RubricsService.RUBRIC_COMMENTCELL)) {
+				hasCommentColumn = true;
+				if(!pWithFeedback) {
+					continue;
+				}
+			}
+			if(!c.getColumnText().isEmpty()) rubricTable += "<th style=\"	min-width: 125px;\"><span>"+c.getColumnText()+"</span></th>";
+			if(isValue(c.getCellText())) {
+				colWeights[col] = getValue(c.getCellText());
+				col += 1;
+			} else if (c.getCellText().equals(RubricsService.RUBRIC_GRADING_ROW_TEXT)) {
+				hasGradingRow = true;
+			}
+		}
+		rubricTable += "</tr>";
+		
+		/*
+		 * I see no other option but to fill up the valus arrays before creating the html table, if not, weights will only be found as the last td in the row.
+		 */
+		for(int i  = 1; i < rubricRows.size(); i++) {
+			RubricRow curRow = rubricRows.get(i);
+			for(RubricCell c : new ArrayList<RubricCell>(curRow.getCellSet())) {
+				if(isValue(c.getCellText())) {
+					rowWeights[i-1] = getValue(c.getCellText());
+				}
+			}
+		}
+		
+		// build the table
+		for(RubricRow currentRow : rubricRows) {
+			hasGradingRow = currentRow.getRowText().equals(RubricsService.RUBRIC_GRADING_ROW_TEXT);
+			isDataRow = !hasGradingRow;
+			String additionalStyle = "position: relative;";
+			String optClass = hasGradingRow ? "class=\"gradingRow\"" : "class=\"dataRow\"";
+			rubricTable += "<tr "+optClass+">";
+			List<RubricCell> cells = new ArrayList<RubricCell>(currentRow.getCellSet());
+			cell = 0;
+			rubricTable += "<td><b>"+currentRow.getRowText()+"</b></td>";
+			for (RubricCell currentCell : cells) {
+				if(hasGradingRow && (currentCell.getColumnText().isEmpty() || currentCell.getCellText().equalsIgnoreCase("[[COMMENTS]]"))) continue;
+				if(cell == 0) additionalStyle += "text-align: center;";
+				if(currentCell.getCellType().equals(RubricsService.RUBRIC_COMMENTCELL) && !hasGradingRow) {
+					commentsCells += currentCell.getCellId().toString() + ",";
+					if(!pWithFeedback) { // < subject to change depending on how JQuery handles comments cells - need to do some research
+						continue;
+					}
+				} else {
+					if(isValue(currentCell.getCellText())) {
+						additionalStyle += "font-weight: bold; text-align: center; background-color: rgba(160, 201, 120, 0.2);";
+					} else if (hasGradingRow) {
+						additionalStyle = "font-weight: bold; text-align: center; background-color: rgba(247, 198, 176, 0.4);";
+					}
+					String elId = isDataRow ? (row-1)+":"+cell : "";
+					rubricTable += 	"<td id=\""+elId+"\" style=\""+additionalStyle+"\">";
+				}
+				rubricTable += "<span style=\"position: relative;\" class=\"cellId-"+currentCell.getCellId()+"\">"+currentCell.getCellText()+"</span>";
+				if(calcPoints && isDataRow) {
+					rubricTable += "<div id='cellPoints' style='display: none; text-align: center; background-color: rgba(195, 219, 243, 0.9); position: absolute; bottom: 0px; right: 0px; padding: 2px; border-radius: 1px;'>";
+					try {
+						if(!isValue(currentCell.getCellText())) {
+							double cellPts = totalPoints * (rowWeights[row-1]/100) * (colWeights[cell]/100);
+							rubricTable += cellPts;
+						}
+					} catch (Exception e) {  }
+					finally { rubricTable += "</div></td>"; }
+				}
+				cell +=1;
+			}
+			rubricTable += "</tr>";
+			row +=1;
+		}
+		if(hasCommentColumn) {
+			state.setAttribute(RubricsService.RUBRIC_COMMENTS_CELL, commentsCells);
+		}
+		return rubricTable;
+	}
+	
+	private boolean isValue(String pVal) {
+		if(pVal.isEmpty()) return false;
+		pVal = pVal.trim();
+		String tmp = "";
+		for(int i = 0; i < pVal.length(); ++i) {
+			if(Character.isLetter(pVal.charAt(i))) return false;
+			else tmp += Character.isDigit(pVal.charAt(i)) || pVal.charAt(i) == '.'  ? pVal.charAt(i) : "" ;
+		}
+		try {
+			Float.parseFloat(tmp);
+			if(tmp.length() >= pVal.length() - 2) // check if all the digits NOT included in tmp are no more than 2; for % and . 
+				return true;
+			else return true;
+		} catch (Exception e) { return false; }
+	}
+	
+	/*
+	 * Returns double value of e.g. 99.5% as 99.50 if valid. 0 otherwise. 
+	 */
+	private double getValue(String pVal) {
+		pVal = pVal.trim();
+		String tmp = "";
+		for(int i = 0; i < pVal.length(); ++i) {
+			tmp += Character.isDigit(pVal.charAt(i)) || pVal.charAt(i) == '.'  ? pVal.charAt(i) : "" ;
+		}
+		try {
+			return Float.parseFloat(tmp);
+		} catch (Exception e) {
+			return 0.0;
+		}
+	}
 	
 	/**
 	 * Dispatcher for view submission list options
@@ -5771,6 +5980,7 @@ public class AssignmentAction extends PagedResourceActionII
 		state.removeAttribute(GRADE_SUBMISSION_DONE);
 		state.removeAttribute(GRADE_SUBMISSION_SUBMIT);
 		state.removeAttribute(AssignmentSubmission.ALLOW_RESUBMIT_NUMBER);
+		resetRubricStateData(state);
 		
 		// SAK-29314
 		state.removeAttribute(STATE_VIEW_SUBS_ONLY);
@@ -5996,8 +6206,10 @@ public class AssignmentAction extends PagedResourceActionII
 	 */
 	private void grade_submission_option(RunData data, String gradeOption)
 	{
+		ParameterParser params = data.getParameters();
 		SessionState state = ((JetspeedRunData) data).getPortletSessionState(((JetspeedRunData) data).getJs_peid());
-
+		String rubricGradingData = params.getString(RubricsService.RUBRIC_GRADE_DATA);
+		
 		boolean withGrade = state.getAttribute(WITH_GRADES) != null ? ((Boolean) state.getAttribute(WITH_GRADES)).booleanValue(): false;
 
 		String sId = (String) state.getAttribute(GRADE_SUBMISSION_SUBMISSION_ID);
@@ -6009,6 +6221,12 @@ public class AssignmentAction extends PagedResourceActionII
 		AssignmentSubmissionEdit sEdit = editSubmission(sId, "grade_submission_option", state);
 		if (sEdit != null)
 		{
+			try {
+				processRubricGradingData(rubricGradingData,sEdit);
+			} catch (Exception e) {
+				M_log.warn("Unable to process grading data for assignment: " + sEdit.getAssignmentId() + " ERROR: " + e.getMessage());
+			}
+			
 			//This logic could be done in one line, but would be harder to read, so break it out to make it easier to follow
 			boolean gradeChanged = false;
 			if((sEdit.getGrade() == null || "".equals(sEdit.getGrade().trim()))
@@ -6200,6 +6418,54 @@ public class AssignmentAction extends PagedResourceActionII
 		sizeResources(state);
 
 	} // grade_submission_option
+	
+	private void processRubricGradingData(String pRubricData, AssignmentSubmissionEdit pSubmissionEdit) throws Exception {
+		String rubricGradingData = pRubricData, submissionId = null;
+		if(rubricGradingData != null && !rubricGradingData.isEmpty()){
+			submissionId = pSubmissionEdit.getId();
+			String rubricGradeDataArray[];
+			ArrayList selectedCells = new ArrayList();
+			HashMap<Long, String> commentCells = new HashMap<Long, String>();
+			rubricGradeDataArray=rubricGradingData.split("\\|\\|");
+			if(rubricGradeDataArray.length > 0) {
+				for(String selectedCell: rubricGradeDataArray){
+					if(selectedCell.length()==0) continue;
+					int equalsIndex = selectedCell.indexOf('=');
+					if(equalsIndex!=-1){
+						commentCells.put(Long.parseLong(selectedCell.substring(0, equalsIndex)) , selectedCell.substring(equalsIndex+1));
+					}else{
+						System.out.println("parseLong(selectedCell)" + Long.parseLong(selectedCell));
+						selectedCells.add(Long.parseLong(selectedCell));
+					}
+				}
+				Set<RubricGrade> rubricGrdSet = new HashSet<RubricGrade>();
+				Rubric rubric = AssignmentService.getRubricById(pSubmissionEdit.getAssignment().getRubricId());
+				Set<RubricRow> rowSet = rubric.getRubricRowSet();
+				for (RubricRow row : rowSet) {
+					Set<RubricCell> cellSet = row.getCellSet();
+					for(RubricCell cell: cellSet){
+						RubricGrade rubricGrd = new RubricGrade();
+						rubricGrd.setRubricCellId(cell.getCellId());
+						Double points;
+						if(cell.getCellType()!=RubricsService.RUBRIC_COMMENTCELL && selectedCells.size() > 0 && selectedCells.contains(cell.getCellId())) 
+							points=1.0;
+						else if(cell.getCellType().equals(RubricsService.RUBRIC_COMMENTCELL))
+						{
+							points=0.0;
+							if(commentCells.containsKey(cell.getCellId())){
+								rubricGrd.setComment(commentCells.get(cell.getCellId()));
+							}
+						}
+						else points=0.0;
+						rubricGrd.setPointsEarned(points);
+						rubricGrdSet.add(rubricGrd);
+						rubricGrd.setAssignmentSubmissionId(submissionId);
+					}
+				}
+				AssignmentService.saveRubricGradeSet(rubricGrdSet, submissionId);
+			}
+		}
+	}
 
 	/**
 	 * Action is to save the submission as a draft
@@ -8212,6 +8478,24 @@ public class AssignmentAction extends PagedResourceActionII
 			AssignmentEdit a = editAssignment(assignmentId, "post_save_assignment", state, true);
 			bool_change_resubmit_option = change_resubmit_option(state, a);
 
+			// Rubric
+			resetRubricStateData(state);
+			Rubric rubric = null;
+			String rubricData = params.getString(RubricsService.RUBRIC_DATA);
+			if(rubricData.length() > 0) {
+				rubric = new Rubric();
+				String rubricType = params.getString("rubric_chosen").equals("predefined") ? " [rubric_type] == predefined " : " [rubric_type] == new ";
+				rubricData = rubricData +
+						rubricType + 
+						RubricsService.RUBRIC_DELIMETERS1;
+				buildRubricFromData(rubric, rubricData);
+			}
+			
+			if(rubric != null) {
+				processRubric(a,rubric,rubricData);
+				ac.setRubricId(a.getRubricId());
+			}
+
 			// put the names and values into vm file
 			String title = (String) state.getAttribute(NEW_ASSIGNMENT_TITLE);
 			String order = (String) state.getAttribute(NEW_ASSIGNMENT_ORDER);
@@ -9923,6 +10207,17 @@ public class AssignmentAction extends PagedResourceActionII
 	}
 	
 	/**
+	 * Simply returns [PREDEFINED] or [NEW] for the data string.
+	 * @param pData
+	 * @return
+	 */
+	private String extractRubricType(String pData) {
+		String tmp = pData.substring(pData.indexOf("[rubric_type]"));
+		tmp = tmp.substring(tmp.indexOf("=")+2, tmp.indexOf(";"));
+		return "["+tmp.toUpperCase().trim()+"]";
+	}
+	
+	/**
 	 * Action is to show the edit assignment screen
 	 */
 	public void doEdit_assignment(RunData data)
@@ -9936,6 +10231,19 @@ public class AssignmentAction extends PagedResourceActionII
 			Assignment a = getAssignment(assignmentId, "doEdit_assignment", state);
 			if (a != null)
 			{
+				// Retrieve associated rubric, if any
+				resetRubricStateData(state);
+				Long rubricId = a.getRubricId();
+				String rubricData;
+				if (rubricId != null) {
+					Rubric rubric = AssignmentService.getRubricById(rubricId);
+					rubricData = extractRubricType(rubric.getDataSet()) +
+							RubricsService.RUBRIC_DELIMETERS2+
+							RubricsService.RUBRIC_DELIMETERS1+
+							rubric.getDataSet();
+					state.setAttribute(RubricsService.EXISTING_RUBRIC, rubricData);
+				}
+				
 				// whether the user can modify the assignment
 				state.setAttribute(EDIT_ASSIGNMENT_ID, assignmentId);
 				
@@ -10788,6 +11096,20 @@ public class AssignmentAction extends PagedResourceActionII
 				// put the resubmission info into state
 				assignment_resubmission_option_into_state(a, s, state);
 			}
+			
+			// handle rubric
+			if(a.getRubricId() != null) {
+				try {
+					Rubric rubric = AssignmentService.getRubricById(a.getRubricId());
+					state.setAttribute(RubricsService.RUBRIC_TITLE, rubric.getTitle());
+					state.setAttribute(RubricsService.RUBRIC_HTML_TABLE, buildRubricHTMLTable(state, rubric, false,a));
+					String existingGradingData = getRubricGradingDataString(s.getId());
+					if(existingGradingData.length() > 0) state.setAttribute(RubricsService.EXISTING_RUBRIC, existingGradingData);
+				} catch (Exception e) {
+					System.out.println("Debug: failed loading rubric for Assignment id: "+a.getId());
+					e.printStackTrace();
+				}
+			} 
 		}
 	}
 
@@ -11043,6 +11365,20 @@ public class AssignmentAction extends PagedResourceActionII
 				}
 			}
 			state.setAttribute(STATE_MODE, _mode);
+			
+			Long rubricId = a.getRubricId();
+			if(rubricId != null) {
+				state.setAttribute(RubricsService.RUBRIC_AVAILABLE, Boolean.TRUE);
+				boolean hasCommentColumn = false;
+				String commentCells = "";
+				Rubric rubric = AssignmentService.getRubricById(rubricId);
+				state.setAttribute(RubricsService.RUBRIC_TITLE, rubric.getTitle());
+				state.setAttribute(RubricsService.RUBRIC_HTML_TABLE, buildRubricHTMLTable(state, rubric,false, a));
+				if(_s != null) {
+					String existingGradingData = getRubricGradingDataString(_s.getId());
+					if(existingGradingData.length() > 0) state.setAttribute(RubricsService.EXISTING_RUBRIC, existingGradingData);
+				}
+			}
 		}
 	}
 	
@@ -12508,7 +12844,8 @@ public class AssignmentAction extends PagedResourceActionII
 		state.removeAttribute(VIEW_SUBMISSION_TEXT);
 		state.setAttribute(VIEW_SUBMISSION_HONOR_PLEDGE_YES, "false");
 		state.removeAttribute(GRADE_GREATER_THAN_MAX_ALERT);
-
+		
+		resetRubricStateData(state);
 	} // resetViewSubmission
 
 	/**
@@ -12519,7 +12856,10 @@ public class AssignmentAction extends PagedResourceActionII
 	{
 		// put the input value into the state attributes
 		state.setAttribute(NEW_ASSIGNMENT_TITLE, "");
-
+		
+		if(state.getAttribute(RubricsService.EXISTING_RUBRIC) != null) {
+			state.removeAttribute(RubricsService.EXISTING_RUBRIC);
+		}
 		// get current time
 		Time t = TimeService.newTime();
 		TimeBreakdown tB = t.breakdownLocal();
@@ -16919,6 +17259,11 @@ public class AssignmentAction extends PagedResourceActionII
 			// set up related state variables
 			putTimePropertiesInState(state, allowResubmitTime, ALLOW_RESUBMIT_CLOSEMONTH, ALLOW_RESUBMIT_CLOSEDAY, ALLOW_RESUBMIT_CLOSEYEAR, ALLOW_RESUBMIT_CLOSEHOUR, ALLOW_RESUBMIT_CLOSEMIN);
 		}
+		if(a.getRubricId() != null) {
+			Rubric rubric = AssignmentService.getRubricById(a.getRubricId());
+			state.setAttribute(RubricsService.RUBRIC_TITLE,rubric.getTitle());
+			state.setAttribute(RubricsService.RUBRIC_HTML_TABLE, buildRubricHTMLTable(state, rubric,false, a));
+		}
 	}
 	
 	/**
@@ -17701,5 +18046,208 @@ public class AssignmentAction extends PagedResourceActionII
 			}
 		}
 	}
-
+	
+	private String getRubricGradingDataString(String submissionId){
+        String selectedCellsString = "";
+    	if (submissionId != null && submissionId.length() > 0){
+        	ArrayList<String> selectedCells = new ArrayList<String>();          
+        	selectedCellsString = "";
+        	List<RubricGrade> rubricGradeList = AssignmentService.getRubricGradesBySubmission(submissionId);
+        	if (rubricGradeList != null){
+        		for (RubricGrade grd : rubricGradeList) {
+        			if(grd.getPointsEarned()!=0)
+        				selectedCells.add(""+grd.getRubricCellId());
+        			else if(grd.getComment()!=null)
+        				selectedCells.add(""+grd.getRubricCellId()+"="+grd.getComment());
+        		}
+        	}
+        	for(Object cellId : selectedCells){
+        		selectedCellsString+=cellId+"||";
+        	}
+        }
+    	return selectedCellsString;
+    }
+    
+    private void buildRubricFromData(Rubric rubric, String pData)
+    {
+    	final String DELIMETER1 = " ;; ", DELIMETER2 = " == ", rubricTemplate = "t3mpl@te:";
+	
+		rubric.setDataSet(pData);
+		
+		String[] records = pData.split(RubricsService.RUBRIC_DELIMETERS1), recordSplit, coordinateSplit;
+		int column, rowumn, rowIndex;
+		boolean isRubricTemplate = false, titleFound = false , descriptionFound = false, commentCell=false, myRub = false;
+		
+		HashMap<Integer, String> rowTitles = new HashMap<Integer, String>();
+		HashMap<Integer, String> colTitles = new HashMap<Integer, String>();
+		ArrayList<Integer> uniqueRowsAL = new ArrayList<Integer>();//for each cell in a row, only one Row needs to be created.
+		ArrayList<RubricRow> rowAL = new ArrayList<RubricRow>();
+		ArrayList<Set<RubricCell>> cellAL = new ArrayList<Set<RubricCell>>();
+		
+		//First Pass: title, description, and rubric row/column titles are set
+		//2nd Pass  : build rows and cells. Rows and cells need titles from 1st pass.
+		for(int rubricPass = 0 ; rubricPass < 2 ; rubricPass++)
+		{
+			titleFound=false; descriptionFound=false;
+			for (String record : records)
+			{
+				boolean emptyCell = false;
+				recordSplit = record.split(RubricsService.RUBRIC_DELIMETERS2);
+				if(recordSplit.length != 2) 
+					emptyCell = true;
+				if(!titleFound && recordSplit[0].indexOf("title") != -1)
+				{
+					if(rubricPass == 0){	
+						if(!emptyCell)
+						{
+							if(recordSplit[1].indexOf(rubricTemplate)!=-1)
+							{
+								recordSplit[1]=recordSplit[1].substring(rubricTemplate.length());
+								isRubricTemplate = true;
+							}
+							rubric.setTitle(recordSplit[1]);
+						}
+						else
+							rubric.setTitle("untitled");
+					}
+					titleFound = true;
+					continue;
+				}
+				else if(!descriptionFound && recordSplit[0].indexOf("description") != -1)
+				{
+					if(rubricPass == 0){
+						if(!emptyCell)	
+							rubric.setDescription(recordSplit[1]);
+						else
+							rubric.setDescription("");
+					}
+					descriptionFound = true;
+					continue;
+				}
+				else if(recordSplit[0].indexOf("templates") != -1)
+				{
+					if(rubricPass == 0){
+						if(!emptyCell)	
+						{
+							// assignment.setTemplateId(recordSplit[1]);
+						}
+					}
+					continue;
+				}
+				else if(recordSplit[0].indexOf("icon") != -1)
+				{
+					if(rubricPass == 0 && !emptyCell){	
+						rubric.setIcon(recordSplit[1]);
+					}
+					continue;
+				}
+				else if(recordSplit[0].indexOf("coreKey") != -1)
+				{
+					if(rubricPass == 0 && !emptyCell){	
+						rubric.setTitleKey(recordSplit[1]);
+					}
+					continue;
+				} else if (recordSplit[0].indexOf("rubric_type") != -1) {
+					// might very well be added eventually to the bean but it is not truly necessary, yet this check ought to stay here
+					continue;
+				} else if(recordSplit[0].indexOf("add_to_my_rubrics") != -1) {
+					rubric.setTemplate(true);
+					myRub = true;
+					continue;
+				} else {
+					
+					try {
+						coordinateSplit = recordSplit[0].split("\\]\\[");
+						column = Integer.parseInt(coordinateSplit[0].substring(1));
+						rowumn = Integer.parseInt(coordinateSplit[1].substring(0, coordinateSplit[1].length()-1));
+					} catch(Exception e) { continue; }
+					
+					if(rubricPass == 0)
+					{
+						if(column == 0  ^  rowumn == 0 )
+						{
+							if(!emptyCell && recordSplit[1].equals("[[COMMENTS]]")){
+								// recordSplit[1]="";
+							}
+							if(rowumn == 0)
+								if(!emptyCell)
+									colTitles.put(column, recordSplit[1]);
+								else colTitles.put(column, "");
+							if(column == 0)
+								if(!emptyCell)
+									rowTitles.put(rowumn, recordSplit[1]);
+								else rowTitles.put(rowumn, "");
+						}
+					}
+					else
+					{
+						if(column == 0  ||  rowumn == 0 ) continue;
+						commentCell=false;
+						if(!emptyCell && recordSplit[1].equals("[[COMMENTS]]")){
+							commentCell=true;
+							// recordSplit[1]="";
+						}
+						if(!uniqueRowsAL.contains((Integer)rowumn))
+						{
+							uniqueRowsAL.add((Integer)rowumn);
+							rowAL.add(new RubricRow(rubric));
+							cellAL.add(new HashSet<RubricCell>()); //each row, has a cell set
+						}
+						
+						rowIndex = uniqueRowsAL.indexOf(rowumn);
+						rowAL.get(rowIndex).setSequence(rowumn);
+						rowAL.get(rowIndex).setRowText(rowTitles.get(rowumn));
+						RubricCell cell = new RubricCell(rubric,rowAL.get(rowIndex));
+						cell.setColumnSequence(column);
+						cell.setCellText((emptyCell)?"":recordSplit[1]);
+						cell.setColumnText(colTitles.get(column));
+						if(commentCell)cell.setCellType(RubricsService.RUBRIC_COMMENTCELL);else cell.setCellType(RubricsService.RUBRIC_NOTCOMMENTCELL);
+						cellAL.get(rowIndex).add(cell);
+					}
+				}
+			}
+		}
+	
+		for(RubricRow curRow: rowAL){curRow.setCellSet(cellAL.get(rowAL.indexOf(curRow)));}
+		
+		Set<RubricRow> rowSet = new HashSet<RubricRow>();
+		for(RubricRow curRow: rowAL){rowSet.add(curRow);}
+		rubric.setRubricRowSet(rowSet);
+		
+		if(!titleFound){System.out.println("RUBRIC: The javascript did not send [title] tag.");rubric.setTitle("untitled");}
+		if(!descriptionFound){System.out.println("RUBRIC: The javascript did not send [description] tag");rubric.setDescription("");}
+		
+		if(myRub) rubric.setTitle(rubric.getTitle() + " - My Rubric");
+		if(!rubric.isTemplate()) rubric.setTemplate(isRubricTemplate);
+		// rubric.setCreatedBy(externalLogic.getCurrentUserId());
+		Date date = new Date();
+		rubric.setCreatedDate(date);
+    }
+    
+    private void processRubric(AssignmentEdit assignment, Rubric pRubric, String pData) {
+    	Long rubricId = assignment.getRubricId();
+    	if (assignment.getRubricId()  != null) {
+    		pRubric.setRubricId(assignment.getRubricId());
+    	}
+    	pRubric.setDataSet(pData);
+		try {
+			AssignmentService.saveRubric(pRubric);
+		} catch(Exception e) {
+			// messages.addMessage(new TargettedMessage("assignment2.rubric.error", null, TargettedMessage.SEVERITY_ERROR));
+			// LOG.error("An exception was thrown while attempting to save the Rubric. --> rubricLogic.saveRubric(rubric); ");
+			System.out.println("Rubric coudlnt be saved - "+e.getMessage());
+    	}
+		assignment.setRubricId(pRubric.getRubricId()); 
+    }
+    
+    /* Resets the rubrics data in the state */
+    private void resetRubricStateData(SessionState state) {
+    	state.removeAttribute(RubricsService.RUBRIC_AVAILABLE);
+    	state.removeAttribute(RubricsService.RUBRIC_DATA);
+    	state.removeAttribute(RubricsService.RUBRIC_TITLE);
+    	state.removeAttribute(RubricsService.RUBRIC_HTML_TABLE);
+    	state.removeAttribute(RubricsService.RUBRIC_COMMENTS_CELL);
+    	state.removeAttribute(RubricsService.EXISTING_RUBRIC);
+    }
+    
 }	

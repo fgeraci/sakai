@@ -171,6 +171,14 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 		</dependency>
+		
+		<!-- Rutgers - Adding Rubrics -->
+        <dependency>
+        	<groupId>org.sakaiproject.rubrics</groupId>
+			<artifactId>rubrics-api</artifactId>
+			<version>${sakai.version}</version>
+        </dependency>
+        
     </dependencies>
 
     <build>

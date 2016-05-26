@@ -209,6 +209,18 @@
 				</td>
 			</tr>
 		</table>
+		#if ($!rubricHTMLTable)
+			<h4>$tlang.getString("rubric.title")</h4>
+			<h3>$!rubric_title</h3>
+			<td>
+				<br>
+				<br>
+				<table id="rubricTable2" border="2">
+					<tbody>$!rubricHTMLTable</tbody>
+				</table>
+				<br>
+			</td>
+		#end
 		<h4>
 			$tlang.getString("gen.assinf")
 		</h4>
@@ -372,6 +384,21 @@
 				#if ($!assignment.getContent().getInstructions().length()>0)
 					<div class="textPanel">$validator.escapeHtmlFormattedText($!assignment.getContent().getInstructions())</div>
 				#end
+				
+				#if ($!rubricHTMLTable)
+					<br>
+					<th>$tlang.getString("rubric.title")</th>
+					<h3>$!rubric_title</h3>
+					<td>
+						<br>
+						<br>
+						<table id="rubricTable2" border="2">
+							<tbody>$!rubricHTMLTable</tbody>
+						</table>
+					</td>
+					<br>
+				#end
+				
 				#set ($size = 0)
 				#set ($props = false)
 				#foreach ($attachment in $assignment.getContent().getAttachments()) 

@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,6 +37,9 @@ import org.sakaiproject.assignment.api.AssignmentContentEdit;
 import org.sakaiproject.assignment.api.AssignmentEdit;
 import org.sakaiproject.assignment.api.AssignmentSubmission;
 import org.sakaiproject.assignment.api.AssignmentSubmissionEdit;
+import org.sakaiproject.rubrics.api.rubric.Rubric;
+import org.sakaiproject.rubrics.api.rubric.RubricGrade;
+import org.sakaiproject.rubrics.api.rubric.RubricsService;
 import org.sakaiproject.assignment.cover.AssignmentService;
 import org.sakaiproject.authz.api.Member;
 import org.sakaiproject.site.api.Site;
@@ -81,6 +85,16 @@ public class DbAssignmentService extends BaseAssignmentService
 	 * Constructors, Dependencies and their setter methods
 	 *********************************************************************************************************************************************************************************************************************************************************/
 
+	/**
+	 * Dependency: RURubricLogic
+	 */
+	private RubricsService rubricService;
+	
+	public void setRubricService(RubricsService pRubricService) {
+		System.out.println("RubricService injected into DbAssignmentService - Assignment");
+		rubricService = pRubricService;
+	}
+	
 	/** Dependency: SqlService */
 	protected SqlService m_sqlService = null;
 
@@ -759,4 +773,30 @@ public class DbAssignmentService extends BaseAssignmentService
 		// TODO:
 		M_log.info(this + " convertToContext: done");
 	}
+	
+	@Override
+	public List<Rubric> getPredefinedRubrics(final String pUserId) {
+		return rubricService.getPredefinedRubrics(pUserId);
+	}
+	
+	@Override
+	public void saveRubric(Rubric pRubric) throws Exception {
+		rubricService.saveRubric(pRubric);
+	}
+	
+	@Override
+	public Rubric getRubricById(Long pId) {
+		return rubricService.getRubricById(pId);
+	}
+	
+	@Override
+	public void saveRubricGradeSet(Set<RubricGrade> rubricGradeSet, String submissionId)throws Exception { 
+		rubricService.saveRubricGradeSet(rubricGradeSet, submissionId);
+	}
+	
+	@Override
+	public List<RubricGrade> getRubricGradesBySubmission(String submissionId) {
+		return rubricService.getRubricGradesBySubmission(submissionId);
+	}
+	
 }

@@ -4,6 +4,7 @@
 <%@ taglib uri="http://myfaces.apache.org/tomahawk" prefix="t"%>
 <%@ taglib uri="http://www.sakaiproject.org/samigo" prefix="samigo" %>
 <%@ taglib uri="http://sakaiproject.org/jsf/sakai" prefix="sakai" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <!DOCTYPE html
      PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -204,7 +205,7 @@ function toPoint(id)
               <h:outputText value="#{deliveryMessages.q} #{question.number} #{deliveryMessages.of} " />
               <h:outputText value="#{part.questions}#{deliveryMessages.column}  " />
             </span>
-            <h:inputText styleClass="form-control" id="adjustedScore" value="#{question.pointsForEdit}" onchange="toPoint(this.id);" >
+            <h:inputText styleClass="questionScoreForRubric" id="adjustedScore" value="#{question.pointsForEdit}" onchange="toPoint(this.id);" >
               <f:validateDoubleRange/>
             </h:inputText>
             <span class="input-group-addon">
@@ -271,11 +272,20 @@ function toPoint(id)
               </f:subview>
             </h:panelGroup>
 
-            <h:panelGroup rendered="#{question.itemData.typeId == 5}">
-              <f:subview id="deliverShortAnswer">
-                <%@ include file="/jsf/delivery/item/deliverShortAnswerLink.jsp" %>
-              </f:subview>
-            </h:panelGroup>
+			<h:panelGroup rendered="#{question.itemData.typeId == 5}">
+	            <f:subview id="deliverShortAnswer">
+	              <%@ include file="/jsf/delivery/item/deliverShortAnswerLink.jsp" %>
+	            </f:subview>
+	            <h:panelGroup rendered="#{not empty question.rubricData}">
+	            	<div class="rubricContainer">
+	      				<h:inputHidden id="rubricGradingDataProxy" value="#{question.rubricGradingData}" /> 
+	      				<input type="hidden" id="rubricGradeData" name="rubricGradeData"/> 
+	                    <div id="hasCommentCell" style="display:none"><h:outputText value="#{question.rubricCommentsCells}" escape="false" /></div>
+	                    <button type="button" class="rubDisplayButton"/>Show Rubric</button>
+	                    <h:outputText value="#{question.rubricData}" escape="false" /> 
+                    </div>
+				</h:panelGroup>
+			</h:panelGroup>
 
             <h:panelGroup rendered="#{question.itemData.typeId == 4}">
               <f:subview id="deliverTrueFalse">
@@ -307,6 +317,10 @@ function toPoint(id)
       </t:dataList>
   </t:dataList>
 </div>
+
+<!-- Rutgers - Rubric addition  -->
+        <%@ include file="/jsf/rubrics/gradingRubric.jsp" %>
+<!-- end -->
 
 <h:panelGroup rendered="#{totalScores.anonymous eq 'false' && studentScores.email != null && studentScores.email != '' && email.fromEmailAddress != null && email.fromEmailAddress != ''}">
   <h:outputText value="<a href=\"mailto:" escape="false" />

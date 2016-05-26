@@ -74,6 +74,12 @@
       </ul>
     </div>
   </div>
+	<br/>
+
+<!-- 1.a Rubrics - just as example -->
+	<h:inputHidden id="existingRubricData" value="#{itemauthor.currentItem.existingRubricData}" /> <!-- Bean proxy for rubricData -->
+    <%@ include file="/jsf/rubrics/rubrics.jsp" %>
+<!--   -->
 
 <!-- 1.2 MIN POINTS -->
 <f:subview id="minPoints" rendered="#{itemauthor.allowMinScore}">

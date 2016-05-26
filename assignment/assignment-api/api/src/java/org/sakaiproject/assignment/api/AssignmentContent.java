@@ -271,4 +271,16 @@ public interface AssignmentContent extends Entity, AttachmentContainer
 	 * @param m_excludeValue
 	 */
 	public void setExcludeValue(int m_excludeValue);
+	
+	/**
+	 * Sets the rubric's id associated with this assignment
+	 * @param pRubricId
+	 */
+	public void setRubricId(final Long pRubricId);
+	
+	/**
+	 * Retrieves the rubric ID associated with this assignment, if any.
+	 * @return
+	 */
+	public Long getRubricId();
 }

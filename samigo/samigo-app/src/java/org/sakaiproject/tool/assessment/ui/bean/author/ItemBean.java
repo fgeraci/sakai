@@ -41,7 +41,9 @@ import javax.faces.model.SelectItemGroup;
 
 import org.apache.commons.math.util.MathUtils;
 import org.sakaiproject.tool.assessment.data.ifc.assessment.ItemDataIfc;
+import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
+import org.sakaiproject.rubrics.api.rubric.RubricsService;
 import org.sakaiproject.tool.assessment.facade.TypeFacade;
 import org.sakaiproject.tool.assessment.facade.AgentFacade;
 import org.sakaiproject.tool.assessment.ui.listener.util.ContextUtil;
@@ -176,6 +178,21 @@ public class ItemBean
   
   private static final ResourceLoader RB_AUTHOR_MESSAGES = new ResourceLoader("org.sakaiproject.tool.assessment.bundle.AuthorMessages");  
   
+  /* Rutgers - Add rubrics service */
+  RubricsService rubricsService = (RubricsService) ComponentManager.get("org.sakaiproject.rubrics.api.rubric.RubricsService");
+  
+  private String existingRubricData;
+  
+  public void setExistingRubricData(String pVal) {
+	  this.existingRubricData = pVal;
+  }
+  
+  public String getExistingRubricData() {
+	  return this.existingRubricData;
+  }
+  
+  /* end */
+  
   /**
    * Creates a new ItemBean object.
    */
@@ -218,7 +235,16 @@ public class ItemBean
    */
   public void setItemId(String string)
   {
-    itemId= string;
+    itemId = string;
+    // can occur when question type is changed while being created
+    /* Rutgers - Rubrics - associating rubric by item id - this is extensible to any item tipe, if we want */
+    if(itemId != null) {
+	    Long rubricId = rubricsService.getRubricIdByItemId(Long.valueOf(itemId), 
+	    		org.sakaiproject.tool.cover.ToolManager.getCurrentTool().getId());
+	    if(rubricId != null) {
+	    	this.existingRubricData = String.valueOf((rubricsService.getRubricById(rubricId)).getDataSet());
+	    }
+    }
   }
 
 

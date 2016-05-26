@@ -33,6 +33,19 @@ import org.sakaiproject.user.api.User;
  */
 public interface AssignmentContentEdit extends AssignmentContent, AttachmentContainerEdit, Edit
 {
+	
+	/**
+	 * Sets the rubric's id associated with this assignment
+	 * @param pRubricId
+	 */
+	public void setRubricId(final Long pRubricId);
+	
+	/**
+	 * Retrieves the rubric ID associated with this assignment, if any.
+	 * @return
+	 */
+	public Long getRubricId();
+	
 	/**
 	 * Set the title.
 	 * 

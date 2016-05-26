@@ -29,6 +29,8 @@ import java.util.Collection;
 import java.util.Map;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.assignment.api.Assignment;
+import org.sakaiproject.rubrics.api.rubric.Rubric;
+import org.sakaiproject.rubrics.api.rubric.RubricGrade;
 import org.sakaiproject.assignment.api.AssignmentSubmission;
 import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.user.api.User;
@@ -883,5 +885,39 @@ public class AssignmentService {
 			return false;
 
 		return service.hasBeenSubmitted(param0);
+	}
+	
+	public static List<Rubric> getPredefinedRubrics(final String pUserId) {
+		org.sakaiproject.assignment.api.AssignmentService service = getInstance();
+		if (service == null)
+			return null;
+		return service.getPredefinedRubrics(pUserId);
+	}
+	
+	public static void saveRubric(Rubric pRubric) throws Exception {
+		org.sakaiproject.assignment.api.AssignmentService service = getInstance();
+		if (service != null)
+			service.saveRubric(pRubric);
+	}
+	
+	public static Rubric getRubricById(Long pId) {
+		org.sakaiproject.assignment.api.AssignmentService service = getInstance();
+		if (service == null)
+			return null;
+		return service.getRubricById(pId);
+	}
+	
+	public static void saveRubricGradeSet(Set<RubricGrade> rubricGradeSet, String submissionId) throws Exception  {
+		org.sakaiproject.assignment.api.AssignmentService service = getInstance();
+		if (service == null)
+			return;
+		service.saveRubricGradeSet(rubricGradeSet, submissionId);
+	}
+	
+	public static List<RubricGrade> getRubricGradesBySubmission(String submissionId) {
+		org.sakaiproject.assignment.api.AssignmentService service = getInstance();
+		if (service == null)
+			return null;
+		return service.getRubricGradesBySubmission(submissionId);
 	}
 }

@@ -130,6 +130,8 @@
 		<input type="hidden" name="option" id="option" value="" />
 		<input type="hidden" name="view" id="view" value="" />
 		<input type="hidden" name="$name_order" id="$name_order" value="$!value_position_order" />
+		<input type="hidden" name="$input_rubricId" id="$input_rubricId" value="noRubric" />
+		<input type="hidden" name="${rubricData}" id="${rubricData}" value="" />
 
 		<div class="form-group row form-required">
 			<label for="$name_title" class="col-sm-2 form-control-label">
@@ -747,6 +749,51 @@
 				#end
 			</div>
 		#end
+		
+		<!-- ADD RUBRIC SELECTOR -->
+			<h4>$tlang.getString("rubric.title")</h4>
+			<div id="rubricOptionsDiv" class="indnt1">
+				<div class="checkbox indnt1">
+					<input class="$name_SELECT_ADD_NO_RUBRIC" id="$name_SELECT_ADD_NO_RUBRIC" name="rubricRadio" type="radio" checked="checked" onchange="rubrics('rubric_choice_none')" />
+					<label for="$name_SELECT_ADD_NO_RUBRIC">$tlang.getString("rubric.addNoRubric")</label>
+				</div>
+				<div class="checkbox indnt1">	
+					<input id="$name_SELECT_ADD_NEW_RUBRIC" name="rubricRadio" type="radio" onchange="rubrics('rubric_choice_modifyOrNew');" />	
+					<label for="$name_SELECT_ADD_NEW_RUBRIC">$tlang.getString("rubric.addNewRubric")</label>
+					<u><a class="addNewRubric_edit" style="display:none; color:blue;" >Edit</a></u>
+					<div id="addToMyRubricsCheck" style="margin: 5px 0 0 5%; display: none;">
+                                <input id="addToMyRubrics" type="checkbox" id="addToMyTemplates" onchange="makeItMyRubric()" /><label>Add to "My Rubrics"</label>
+                    </div>
+				</div>
+				<div class="checkbox indnt1">	
+					<input id="$name_SELECT_ADD_PREDEFINED_RUBRIC" name="rubricRadio" type="radio" onchange="rubrics('rubric_choice_predefined');" />	
+					<label for="$name_SELECT_ADD_PREDEFINED_RUBRIC">$tlang.getString("rubric.addPredefinedRubric")</label>
+					<u><a class="addPredefinedRubric_edit" style="display:none; color:blue;" ></a></u>
+				</div>
+				<div class="checkbox indnt1">
+                    <input class="select_addPredefinedRubric select_myRubrics" id="select_addPredefinedRubric" name="rubricRadio" type="radio" onclick="rubrics('rubric_my_rubrics');" />
+                    <label for="select_addPredefinedRubric">$tlang.getString("rubric.addMyRubrics")</label>
+                    <u><a class="addMyRubric_edit" style="display:none; color:blue;" ></a></u>
+	            </div>
+			</div>
+		<!-- ------------------- -->
+		
+		<script>
+		<!--
+			function rubricChanged(option) {
+				var inputRubric = document.getElementById("$input_rubricId");
+				if(option == "$name_SELECT_ADD_NO_RUBRIC") {
+					inputRubric.value = "none";
+				} else if (option == "$name_SELECT_ADD_NEW_RUBRIC") {
+					inputRubric.value = "newRubric";
+				} else {
+					inputRubric.value = "preDefRubric";
+				}
+				console.log(option+" selected - value of "+inputRubric.id+" is: "+inputRubric.value);
+			}
+		-->
+		</script>	
+		
 		#if( ($!withGrade && $!withGradebook) || ($enableAnonGrading || $value_CheckAnonymousGrading.equals("true")) )
 			<h4>$!tlang.getString('grading')</h4>
 		#end
@@ -1711,4 +1758,123 @@
 		<input type="hidden" name="sakai_csrf_token" value="$sakai_csrf_token" />
 	</form>
 </div>
+
+<!-- RUBRIC DIALOGS -->
+
+	<!-- RUBRIC ADDS -->
+    <script language="JavaScript" src="/rubrics-tool/js/Rubrics/map.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/rubrics-tool/js/Rubrics/RubricsCreator.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/rubrics-tool/js/Rubrics/Rubrics.js" type="text/javascript"></script>
+    <script language="JavaScript" src="/rubrics-tool/js/Rubrics/jquery.tablesorter.js" type="text/javascript"></script>
+	<!-- ----------- -->
+
+	<div style="display:none;" class="rubric_predefined_data"></div>
+	<div style="display:none;" class="rubric_predefined_data_unprocessed">${predefined_rubrics}</div>
+
+
+	<div id="blankForm" style="display:none;"></div> <!-- Reset Button -->
+	<div style="display:none;" id="rubric_savedInput"></div>
+	<div id="rows_and_colsXY" style="display:none;"></div>
+	<div id="existingRubric" style="display:none;">${existingRubricData}</div>
+	<input type="hidden" name='rubric_chosen' class="rubric_chosen" id="rubric_chosen" />
+	
+	<div class="rubric_dialog" id="rubric_choice_predefined_dialog" title="Choose from the core rubric templates">
+            <div id="rubricsTemplatesTabs">
+                    <ul>
+                            <li>
+                                    <a href="#rubric_options_html">Core Rubrics</a>
+                            </li>
+                            <li>
+                                    <a href="#my_rubrics_options">My Rubrics</a>
+                            </li>
+                    </ul>
+                    <div id="rubric_options_html"></div>
+                    <div id="my_rubrics_options"></div>
+            </div>
+
+    </div>
+	
+	<div class="rubric_dialog" id="rubric_choice_modifyOrNew_dialog" title="Create a new rubric">
+	<div id="rowsColsTable" name="rowsColsTable">
+	<table  style="width:100%;height:100%;empty-cells:show;">
+		<tr>
+		<td colspan="2" >
+			<table style="width:100%;height:100%;">
+			<tr>
+			<td><label for="rubric_title">Title</label></td>
+			<td><input id="rubric_title" onkeypress="return checkEnter(event)" name="rubric_title" type="text" /></td>
+			</tr>
+			<tr style="display:none;">
+			<td><label for="rubric_description">Description</label></td>
+			<td><input id="rubric_description" onkeypress="return checkEnter(event)" name="rubric_description" type="text" /></td>
+			</tr>
+			<tr style="display:none;">
+			<td><label for="rubric_icon_link">Image Link</label></td>
+			<td><input id="rubric_icon_link" onkeypress="return checkEnter(event)" name="rubric_icon_link" type="text" /></td>
+			</tr>
+			<tr style="display:none;">
+			<td><label for="rubric_coreKey">Key</label></td>
+			<td><input id="rubric_coreKey" onkeypress="return checkEnter(event)" name="rubric_coreKey" type="text" /></td>
+			</tr>
+			</table>
+		</td>
+		</tr>
+		<tr>
+			<th style="height: 45px;">Rows</th>
+			<th style="height: 45px;">Columns</th>
+		</tr>
+		<tr>
+			<td>
+				<table id="rowsTable" style="width:100%;height:100%;">
+					<tr class="form_rows new-row_latch_1 ui-state-default">
+						<td style="vertical-align:top;">
+							<textarea id="rows[]" class="rubric_rows_form" type="text" onkeypress="return checkEnter(event)" value="" ></textarea>
+							
+						</td>
+					</tr>
+				</table>
+			</td>
+			<td>
+				<table id="colsTable" style="width:100%;height:100%;">
+					<tr class="form_cols new-col_latch_1 ui-state-default">
+						<td style="vertical-align:top;">
+							<textarea id="cols[]" class="rubric_cols_form" type="text" onkeypress="return checkEnter(event)" value="" ></textarea>
+							
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<button type="button" onclick="addRowCol('row')">Add row</button><br />
+			</td>
+			<td>
+				<button type="button" onclick="addRowCol('col')">Add column</button><br />
+			</td>
+		</tr>
+	</table>
+	</div>
+	</div>
+	
+	<div class="rubric_dialog" id="rubric_choice_modifyOrNew_dialog-preview" title="Preview">
+	<table id="rub_preview_table" border="1" style="width:100%;height:100%;empty-cells:show;">
+		<!-- This is overwritten when user clicks save. See Rutgers.Rubrics.js function setupInputAndPreview().
+		<tr id="rub_preview_top">
+			<td></td>
+		</tr>				
+		-->
+	</table>
+	</div>
+	
+	<div class="rubric_dialog" id="rubric_predefined-preview" title="Preview">
+	<table id="rub_predefined_preview_table" border="1" style="width:100%;height:100%;empty-cells:show;"></table>
+	</div>
+	
+	<div class="rubric_dialog" id="rubric_choice_modifyOrNew_dialog-save" title="Save">
+		Would you like to save your changes?
+	</div>
+	
+<!-- -------------- -->
+
 <!-- end: chef_assignments_instructor_new_edit_assignment.vm  -->

@@ -33,6 +33,9 @@ import org.apache.poi.ss.util.WorkbookUtil;
 import org.sakaiproject.announcement.api.AnnouncementChannel;
 import org.sakaiproject.announcement.api.AnnouncementService;
 import org.sakaiproject.assignment.api.*;
+import org.sakaiproject.rubrics.api.rubric.Rubric;
+import org.sakaiproject.rubrics.api.rubric.RubricGrade;
+import org.sakaiproject.rubrics.api.rubric.RubricsService;
 import org.sakaiproject.assignment.taggable.api.AssignmentActivityProducer;
 import org.sakaiproject.authz.api.*;
 import org.sakaiproject.authz.cover.FunctionManager;
@@ -7259,6 +7262,9 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 
 	public class BaseAssignment implements Assignment
 	{
+		
+		protected Long m_rubricId;
+	
 		protected ResourcePropertiesEdit m_properties;
 
 		protected String m_id;
@@ -7308,6 +7314,14 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		protected int m_peerAssessmentNumReviews;
 
 		protected String m_peerAssessmentInstructions;
+		
+		public void setRubricId(final Long pRubricId) {
+			m_rubricId = pRubricId;
+		}
+		
+		public Long getRubricId() {
+			return m_rubricId;
+		}
 
 		/**
 		 * constructor
@@ -7411,6 +7425,9 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 				}catch(Exception e){}
 			}
 			m_peerAssessmentInstructions = el.getAttribute("peerassessmentinstructions");
+			try {
+				m_rubricId = Long.valueOf(el.getAttribute("rubricId"));
+			} catch(Exception e) { }
 
 
 			// READ THE AUTHORS
@@ -7537,7 +7554,9 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 							{
 								m_position_order = 0; // prevents null pointer if there is no position_order defined as well as helps with the sorting
 							}
-							
+							try {
+								m_rubricId = Long.parseLong(attributes.getValue("rubricId"));
+							} catch (Exception e) { }
 							m_allowPeerAssessment = getBool(attributes.getValue("allowpeerassessment"));
 							m_peerAssessmentPeriodTime = getTimeObject(attributes.getValue("peerassessmentperiodtime"));
 							m_peerAssessmentAnonEval = getBool(attributes.getValue("peerassessmentanoneval"));
@@ -7550,8 +7569,9 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 								}catch(Exception e){}
 							}
 							m_peerAssessmentInstructions = attributes.getValue("peerassessmentinstructions");
-
-
+							try {
+								m_rubricId = Long.parseLong(attributes.getValue("rubricId"));
+							} catch (Exception e) { }
 							// READ THE AUTHORS
 							m_authors = new ArrayList();
 							intString = attributes.getValue("numberofauthors");
@@ -7654,7 +7674,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			assignment.setAttribute("peerassessmentstudentviewreviews", getBoolString(m_peerAssessmentStudentViewReviews));
 			assignment.setAttribute("peerassessmentnumreviews", "" + m_peerAssessmentNumReviews);
 			assignment.setAttribute("peerassessmentinstructions", m_peerAssessmentInstructions);
-
+			assignment.setAttribute("rubricId", String.valueOf(m_rubricId));
 			
 				M_log.debug(this + " BASE ASSIGNMENT : TOXML : saved regular properties");
 
@@ -7738,7 +7758,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 				m_peerAssessmentStudentViewReviews = assignment.getPeerAssessmentStudentViewReviews();
 				m_peerAssessmentNumReviews = assignment.getPeerAssessmentNumReviews();
 				m_peerAssessmentInstructions = assignment.getPeerAssessmentInstructions();
-
+				m_rubricId = assignment.getRubricId() != null ? assignment.getRubricId() : null;
 			}
 		}
 
@@ -8688,6 +8708,8 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 
 	public class BaseAssignmentContent implements AssignmentContent
 	{
+		protected Long m_rubricId;
+		
 		protected ResourcePropertiesEdit m_properties;
 
 		protected String m_id;
@@ -8741,6 +8763,14 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 
 		protected Time m_timeLastModified;
 		
+		public void setRubricId(final Long pRubricId) {
+			m_rubricId = pRubricId;
+		}
+		
+		public Long getRubricId() {
+			return m_rubricId;
+		}
+		
 		/**
 		 * constructor
 		 */
@@ -8793,7 +8823,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			String tempString = null;
 			Reference tempReference = null;
 			M_log.debug(" BaseAssignmentContent : Entering read");
-
+			m_rubricId = el.getAttribute("rubricId") != null ? Long.parseLong(el.getAttribute("rubricId")) : null;
 			m_id = el.getAttribute("id");
 			m_context = el.getAttribute("context");
 			m_title = el.getAttribute("title");
@@ -9207,7 +9237,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 			content.setAttribute("excludeQuoted", getBoolString(m_excludeQuoted));
 			content.setAttribute("excludeType", Integer.toString(m_excludeType));
 			content.setAttribute("excludeValue", Integer.toString(m_excludeValue));
-			
+			content.setAttribute("rubricId", m_rubricId == null ? null : String.valueOf(m_rubricId));
 			content.setAttribute("honorpledge", String.valueOf(m_honorPledge));
 			content.setAttribute("submissiontype", String.valueOf(m_typeOfSubmission));
 			content.setAttribute("typeofgrade", String.valueOf(m_typeOfGrade));
@@ -9292,6 +9322,7 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 				m_timeLastModified = content.getTimeLastModified();
 				m_properties = new BaseResourcePropertiesEdit();
 				m_properties.addAll(content.getProperties());
+				m_rubricId = content.getRubricId();
 			}
 		}
 
@@ -9926,7 +9957,15 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		/******************************************************************************************************************************************************************************************************************************************************
 		 * AssignmentContentEdit Implementation
 		 *****************************************************************************************************************************************************************************************************************************************************/
-
+		
+		public void setRubricId(final Long pRubricId) {
+			m_rubricId = pRubricId;
+		}
+		
+		public Long getRubricId() {
+			return m_rubricId;
+		}
+		
 		/**
 		 * Set the title.
 		 * 
@@ -14235,5 +14274,14 @@ public abstract class BaseAssignmentService implements AssignmentService, Entity
 		}
 		return false;
 	}
+	
+	public abstract List<Rubric> getPredefinedRubrics(final String pUserId);
+    
+	public abstract void saveRubric(Rubric pRubric) throws Exception;
+    
+	public abstract void saveRubricGradeSet(Set<RubricGrade> rubricGradeSet, String submissionId) throws Exception;
+    
+	public abstract List<RubricGrade> getRubricGradesBySubmission(String submissionId);
+	
 } // BaseAssignmentService
 

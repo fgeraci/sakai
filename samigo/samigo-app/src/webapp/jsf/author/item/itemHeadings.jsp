@@ -1,3 +1,4 @@
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%-- Headings for item edit pages, needs to have msg=AuthorMessages.properties.  --%>
 <!-- Core files -->
 <script type="text/JavaScript">

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<name>Rubrics</name>
+	<groupId>org.sakaiproject.rubrics</groupId>
+	<artifactId>rubrics</artifactId>
+
+	<packaging>pom</packaging>
+	<version>11-SNAPSHOT</version>
+
+   	<parent>
+       	<groupId>org.sakaiproject</groupId>
+       	<artifactId>master</artifactId>
+       	<version>11-SNAPSHOT</version>
+       	<relativePath>../master/pom.xml</relativePath>
+   	</parent>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<sakai.version>11-SNAPSHOT</sakai.version>
+	</properties>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+			<groupId>org.sakaiproject.rubrics</groupId>
+			  <artifactId>rubrics-api</artifactId>
+			  <version>11-SNAPSHOT</version>
+			  <scope>provided</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.sakaiproject.rubrics</groupId>
+			    <artifactId>rubrics-impl</artifactId>
+			    <version>11-SNAPSHOT</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	
+	<modules>
+		<module>rubrics-api</module>
+		<module>rubrics-bundle</module>
+		<module>rubrics-impl</module>
+		<module>rubrics-tool</module>
+		<module>rubrics-pack</module>
+	</modules>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.3</version>
+				<configuration>
+				  <source>1.7</source>
+				  <target>1.7</target>
+				</configuration>
+		  	</plugin>
+		</plugins>
+	</build>
+	
+</project>
+ 

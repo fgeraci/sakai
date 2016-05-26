@@ -165,14 +165,19 @@
             <artifactId>jsp-api</artifactId>
 	    <scope>provided</scope>
         </dependency>
-	<dependency>
+        <dependency>
+ 			<groupId>javax.servlet</groupId>
+ 			<artifactId>servlet-api</artifactId>
+ 		</dependency>
+		<dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>jstl</artifactId>
             <scope>compile</scope>
         </dependency>
-		<dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+        <dependency>
+ 			<groupId>jstl</groupId>
+        	<artifactId>jstl</artifactId>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>jdom</groupId>
@@ -266,6 +271,17 @@
         	<version>${joda.time.version}</version>
         	<type>jar</type>
         	<scope>compile</scope>
+        </dependency>
+        <!-- Rutgers - Adding Rubrics -->
+        <dependency>
+        	<groupId>org.sakaiproject.rubrics</groupId>
+			  <artifactId>rubrics-api</artifactId>
+			  <version>${sakai.version}</version>
+			  <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.sakaiproject.kernel</groupId>
+            <artifactId>sakai-kernel-api</artifactId>
         </dependency>
 	</dependencies>
     

@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+	<!-- Hibernate persistence -->
+
+	<bean id="org.sakaiproject.rubrics.hbm.rubricsHibernateMappings"
+		class="org.sakaiproject.springframework.orm.hibernate.impl.AdditionalHibernateMappingsImpl">
+		<property name="mappingResources">
+			<list>
+				<value>org/sakaiproject/rubrics/api/model/Rubric.hbm.xml</value>
+				<value>org/sakaiproject/rubrics/api/model/RubricCell.hbm.xml</value>
+				<value>org/sakaiproject/rubrics/api/model/RubricGrade.hbm.xml</value>
+				<value>org/sakaiproject/rubrics/api/model/RubricRow.hbm.xml</value>
+				<value>org/sakaiproject/rubrics/api/model/RubricMappedItem.hbm.xml</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- DAO beans -->
+
+	<bean id="org.sakaiproject.rubrics.dao.RURubricDaoTarget" class="org.sakaiproject.rubrics.impl.RURubricDaoImpl"
+		init-method="init">
+		<property name="sessionFactory"
+			ref="org.sakaiproject.springframework.orm.hibernate.GlobalSessionFactory" />
+		<property name="persistentClasses">
+			<list>
+				<value>org.sakaiproject.rubrics.api.rubric.Rubric</value>
+				<value>org.sakaiproject.rubrics.api.rubric.RubricCell</value>
+				<value>org.sakaiproject.rubrics.api.rubric.RubricRow</value>
+				<value>org.sakaiproject.rubrics.api.rubric.RubricGrade</value>
+				<value>org.sakaiproject.rubrics.api.rubric.RubricMappedItem</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="org.sakaiproject.rubrics.dao.RURubricDao"
+		class="org.sakaiproject.genericdao.springutil.CurrentClassLoaderTxProxyFactoryBean">
+		<property name="transactionManager"
+			ref="org.sakaiproject.springframework.orm.hibernate.GlobalTransactionManager" />
+		<property name="target"
+			ref="org.sakaiproject.rubrics.dao.RURubricDaoTarget" />
+		<property name="transactionAttributes">
+			<props>
+				<prop key="get*">PROPAGATION_REQUIRED,readOnly</prop>
+				<prop key="is*">PROPAGATION_REQUIRED,readOnly</prop>
+				<prop key="*">PROPAGATION_REQUIRED</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- Rubric Beans -->
+
+	<bean id="org.sakaiproject.rubrics.api.rubric.ExternalLogic"
+		class="org.sakaiproject.rubrics.impl.ExternalLogicImpl" init-method="init">
+		<property name="sessionManager" ref="org.sakaiproject.tool.api.SessionManager" />
+		<property name="siteService" ref="org.sakaiproject.site.api.SiteService" />
+		<property name="toolManager" ref="org.sakaiproject.tool.api.ToolManager" />
+		<property name="userDirectoryService"
+			ref="org.sakaiproject.user.api.UserDirectoryService" />
+		<property name="serverConfigurationService"
+			ref="org.sakaiproject.component.api.ServerConfigurationService" />
+		<property name="timeService" ref="org.sakaiproject.time.api.TimeService" />
+	</bean>
+
+	<bean id="org.sakaiproject.rubrics.logic.RURubricLogic" class="org.sakaiproject.rubrics.impl.RURubricLogicImpl"
+		init-method="init">
+		<property name="rubricDao" ref="org.sakaiproject.rubrics.dao.RURubricDao" />
+		<property name="externalLogic"
+			ref="org.sakaiproject.rubrics.api.rubric.ExternalLogic" />
+	</bean>
+
+	<bean 	id="org.sakaiproject.rubrics.api.rubric.RubricsService" 
+			name="org.sakaiproject.rubrics.api.rubric.RubricsService" 
+			class="org.sakaiproject.rubrics.impl.RubricsServiceImpl"
+			init-method="init">
+		<property name="rubricsLogic" 	ref="org.sakaiproject.rubrics.logic.RURubricLogic" />
+		<property name="externalLogic" 	ref="org.sakaiproject.rubrics.api.rubric.ExternalLogic" />
+		<property name="sqlService"><ref bean="org.sakaiproject.db.api.SqlService"/></property>
+		<property name="autoDdl"><value>${auto.ddl}</value></property>
+	</bean>
+
+</beans>

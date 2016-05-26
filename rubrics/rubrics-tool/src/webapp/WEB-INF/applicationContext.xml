@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+	<bean id="org.sakaiproject.rubrics.tool.RubricsTool" class="org.sakaiproject.rubrics.tool.RubricsTool" init-method="init">
+		<property name="rubricsService" ref="org.sakaiproject.rubrics.api.rubric.RubricsService" />
+	</bean>
+
+</beans>

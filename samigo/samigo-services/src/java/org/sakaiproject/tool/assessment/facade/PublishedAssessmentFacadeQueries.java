@@ -42,12 +42,14 @@ import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.sakaiproject.authz.cover.SecurityService;
+import org.sakaiproject.component.cover.ComponentManager;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.content.api.ContentResource;
 import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.exception.PermissionException;
 import org.sakaiproject.exception.TypeException;
+import org.sakaiproject.rubrics.api.rubric.RubricsService;
 import org.sakaiproject.service.gradebook.shared.GradebookExternalAssessmentService;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
@@ -385,8 +387,21 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport
 		log.debug("**published item size = " + itemSet.size());
 		HashSet h = new HashSet();
 		Iterator j = itemSet.iterator();
+		/* Rutgers - Rubrics */
+		RubricsService rubricsService = (RubricsService) ComponentManager.get("org.sakaiproject.rubrics.api.rubric.RubricsService");
+	    String toolId = org.sakaiproject.tool.cover.ToolManager.getCurrentTool().getId();
+	    /* end */
 		while (j.hasNext()) {
 			ItemData item = (ItemData) j.next();
+			
+			/* Rutgers - Rubrics - is there a rubric? */
+		    Long rubricId = rubricsService.getRubricIdByItemId(Long.valueOf(item.getItemId()), 
+		    		toolId);
+		    if(rubricId != null) {
+		    	item.getItemMetaDataSet().add(new ItemMetaData(item, RubricsService.RUBRIC_AVAILABLE, String.valueOf(rubricId)));
+		    }
+			/*	end	*/
+			
 			PublishedItemData publishedItem = new PublishedItemData(
 					publishedSection, item.getSequence(), item.getDuration(),
 					item.getInstruction(), item.getDescription(), item
@@ -732,6 +747,12 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport
 		// be lots of changes invloved if I remove PARTID from ItemMetaData. I need
 		// to spend time to evaulate and make the changes - not able to do this at
 		// this point.
+		
+		/* Rutgers - Rubrics - get service before spinning */
+		RubricsService rubricsService = (RubricsService) ComponentManager.get("org.sakaiproject.rubrics.api.rubric.RubricsService");
+		String toolId = org.sakaiproject.tool.cover.ToolManager.getCurrentTool().getId();
+		/* end */
+		
 		Set sectionSet = publishedAssessment.getSectionSet();
 		Iterator sectionIter = sectionSet.iterator();
 		while (sectionIter.hasNext()) {
@@ -749,6 +770,15 @@ public class PublishedAssessmentFacadeQueries extends HibernateDaoSupport
 						log.debug("sectionId = " + section.getSectionId());
 						itemMetaData.setEntry(section.getSectionId().toString());
 					}
+					/* Rutgers - Rubrics - map the newly created item id with the corresponding rubric */
+					else if (itemMetaData.getLabel() != null && itemMetaData.getLabel().equals(RubricsService.RUBRIC_AVAILABLE)) {
+						try {
+							rubricsService.saveRubricForItemId(item.getItemId(),toolId,Long.parseLong(itemMetaData.getEntry()));
+						} catch (Exception e) {
+							System.out.println("Failed to map rubric to item id");
+						}
+					}
+					/* end */
 				}
 			}
 		}

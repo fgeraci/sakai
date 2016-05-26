@@ -347,6 +347,64 @@ $(document).ready(function(){
 		#if ($!assignment.getContent().getInstructions().length()>0)
 			<div class="textPanel">$validator.escapeHtmlFormattedText($!assignment.getContent().getInstructions())</div>
 		#end
+		
+		#if ($!rubric_available)
+			<input type="hidden" id="existingRubricData" value="$!existingRubricData" />
+			#if ($!rubric_comments_cell)
+				<div id="hasCommentCell" style="display:none;">$!rubric_comments_cell</div>
+			#end
+			<h4>$tlang.getString("rubric.title")</h4>
+			<h3>$!rubric_title</h3>
+			<table id="rubricTable2" border="2">
+				<tbody>$!rubricHTMLTable</tbody>
+			</table>
+			<br>
+			<br>
+			<!-- RUBRIC SCRIPTS -->
+			<script>
+				function selectExistingRows(){
+			    	var data=$('input[id$="existingRubricData"]').val();
+			    	data=data.split("||");
+			    	for(var i=0; i<data.length; i++){
+			    		if(data[i].length==0)continue;
+			    		equalsIndex=data[i].indexOf("=");
+			    		if($('div[id$="hasCommentCell"]').length>0 && equalsIndex!=-1){
+			    			$(".cellId-"+data[i].substring(0,equalsIndex)).text(data[i].substring(equalsIndex+1));
+			    		}
+			    		else {
+			    			if($(".cellId-"+data[i]).length>0){
+			    				$(".cellId-"+data[i]).parent().css("background-color", "lightblue");
+			    			}
+			    		}
+		    		}
+				}
+		
+				function addCommentColumn($rubricTable, cellIds){
+					$("tr:first", $rubricTable).each(function(){$(this).append("<td>Comments</td>");});
+					var cells=cellIds.split(","), i=0;
+					var fromRow = "tr:gt(0)";
+					if($(".gradingRow").length > 0) {
+						fromRow = "tr:gt(1)";
+						$("tr:eq(1)", $rubricTable).append("<td style=\"background-color: rgba(247, 198, 176, 0.4);\"></td>");
+					}
+					$(fromRow, $rubricTable).each(function(){$(this).append('<td style=\"text-align:center;\" class="cellId-'+cells[i++]+'"></td>');});
+				} 
+		
+				$(function(){
+					if ($('input[id$="existingRubricData"]').length > 0 && $('input[id$="existingRubricData"]').val().length != 0) {
+						if ($("[id$=hasCommentCell]").length > 0)
+						{
+							addCommentColumn($("#rubricTable2"), $("[id$=hasCommentCell]").text());
+						}			
+						selectExistingRows();
+					}
+				});
+			</script>
+		#end
+		
+		
+		
+		
 		## assignment attachment
 		#set ($size = 0)
 		#set ($props = false)
