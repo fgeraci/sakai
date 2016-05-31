@@ -45,6 +45,7 @@ public class DiscussionAreaBean
 	 private Area area;
 	 private int numPendingMsgs;
 	 private SimpleDateFormat datetimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+	 private String hide;
 	 
 	 public DiscussionAreaBean(Area area)
 	 {
@@ -291,6 +292,43 @@ public class DiscussionAreaBean
 			}
 		  }else{
 			  area.setCloseDate(null);
+		  }
+	  }
+	  
+	  /**
+	   * @return Returns the hide as String.
+	   */
+	  public String getHide()
+	  {
+		  LOG.debug("getHide()");
+		  if (hide == null || "".equals(hide)){
+			  if (area == null || area.getHide() == null
+					  || area.getHide().booleanValue() == false)
+			  {
+				  hide = Boolean.FALSE.toString();
+			  }
+			  else
+			  {
+				  hide = Boolean.TRUE.toString();
+			  }
+		  }
+		  return hide;
+	  }
+
+	  /**
+	   * @param String hide
+	   *          The locked to set.
+	   */
+	  public void setHide(String hide)
+	  {
+		  LOG.debug("setHide(String"+ hide+")");
+		  if (hide.equals(Boolean.TRUE.toString()))
+		  {
+			  area.setHide(Boolean.valueOf(true));
+		  }
+		  else
+		  {
+			  area.setHide(Boolean.valueOf(false));
 		  }
 	  }
 }

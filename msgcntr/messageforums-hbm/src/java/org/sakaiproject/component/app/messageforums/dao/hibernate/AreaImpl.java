@@ -45,6 +45,8 @@ public class AreaImpl extends MutableEntityImpl implements Area
   
   private Boolean locked;
   
+  private Boolean hide = false;
+  
   private Boolean moderated;
   
   private Boolean autoMarkThreadsRead;
@@ -417,5 +419,16 @@ public Set getDiscussionForumsSet() {
       public void setSendEmailOut(Boolean sendEmailOut) {
           this.sendEmailOut = sendEmailOut;
       }
+
+	@Override
+	public Boolean getHide() {
+		return hide;
+		
+	}
+
+	@Override
+	public void setHide(Boolean hide) {
+		this.hide = hide;
+	}
 
 }

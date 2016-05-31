@@ -191,10 +191,18 @@
 
 			<div class="indnt1">
 				<p class="checkbox">
+					<h:panelGroup>
 					<h:selectBooleanCheckbox
 						title="topicLocked" value="#{ForumTool.selectedTopic.topicLocked}"
 						id="topic_locked">
 					</h:selectBooleanCheckbox> <h:outputLabel for="topic_locked" value="#{msgs.cdfm_lock_topic}" />
+						<h:panelGroup styleClass="checkbox sub">
+							<h:selectBooleanCheckbox
+								title="topicHide" value="#{ForumTool.selectedTopic.topicHide}"
+								id="topic_hide">
+							</h:selectBooleanCheckbox> <h:outputLabel for="topic_hide" value="#{msgs.cdfm_hide_topic}" />
+						</h:panelGroup>
+					</h:panelGroup>
 				</p>	
 				<p class="checkbox">
 					<h:selectBooleanCheckbox

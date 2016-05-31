@@ -42,6 +42,14 @@
 	function closeDateCal(){
 			NewCal('revise:closeDate','MMDDYYYY',true,12, '<h:outputText value="#{ForumTool.defaultAvailabilityTime}"/>');
 	}
+	
+	function lockDateCal(){
+			NewCal('revise:unlockDate','MMDDYYYY',true,12, '<h:outputText value="#{ForumTool.defaultAvailabilityTime}"/>');
+	}
+	
+	function unlockDateCal(){
+			NewCal('revise:lockDate','MMDDYYYY',true,12, '<h:outputText value="#{ForumTool.defaultAvailabilityTime}"/>');
+	}
 	</script>
 
   <!-- Y:\msgcntr\messageforums-app\src\webapp\jsp\dfReviseForumSettingsAttach.jsp -->
@@ -179,10 +187,32 @@
 			</h2>
 			
 				<p class="checkbox">
-					<h:selectBooleanCheckbox
-						title="ForumLocked" value="#{ForumTool.selectedForum.forumLocked}"
-						id="forum_locked">
-					</h:selectBooleanCheckbox> <h:outputLabel for="forum_locked" value="#{msgs.cdfm_lock_forum}" />
+				<h:panelGroup>
+				<h:selectBooleanCheckbox
+					title="ForumLocked" value="#{ForumTool.selectedForum.forumLocked}"
+					id="forum_locked">
+				</h:selectBooleanCheckbox> <h:outputLabel for="forum_locked" value="#{msgs.cdfm_lock_forum}" />
+					<h:panelGroup styleClass="checkbox sub">
+						<h:selectBooleanCheckbox
+							title="EnableForumLockDates" value="#{ForumTool.selectedForum.timedLock}"
+							id="forum_timed_lock">
+						</h:selectBooleanCheckbox> <h:outputLabel for="forum_locked" value="#{msgs.cdfm_timed_lock}" />
+						<h:panelGroup id="lockDateSpan" styleClass="checkbox indnt2">
+		               	    <h:outputLabel value="#{msgs.lockDate}: " for="lockDate"/>
+			                <h:inputText id="lockDate" styleClass="openDate" value="#{ForumTool.selectedForum.lockDate}"/>							
+						</h:panelGroup>
+						<h:panelGroup id="unlockDateSpan" styleClass="checkbox indnt2">
+		               	    <h:outputLabel value="#{msgs.unlockDate}: " for="unlockDate"/>
+			                <h:inputText id="unlockDate" styleClass="openDate" value="#{ForumTool.selectedForum.unlockDate}"/>							
+						</h:panelGroup>
+					</h:panelGroup>
+				</h:panelGroup>
+				</p>
+				<p>
+				<h:selectBooleanCheckbox
+				title="ForumHide" value="#{ForumTool.selectedForum.forumHide}"
+				id="forum_hide">
+				</h:selectBooleanCheckbox> <h:outputLabel for="forum_hide" value="#{msgs.cdfm_hide_forum}" />
 				</p>
 				<p class="checkbox">
 					<h:selectBooleanCheckbox
@@ -209,9 +239,7 @@
                </h:panelGroup>
                <h:panelGroup id="openDateSpan" styleClass="checkbox indnt2 openDateSpan calWidget" style="display: #{ForumTool.selectedForum.availabilityRestricted ? '' : 'none'}">
                	   <h:outputLabel value="#{msgs.openDate}: " for="openDate"/>
-
 	               <h:inputText id="openDate" styleClass="openDate" value="#{ForumTool.selectedForum.openDate}"/>
-
               	</h:panelGroup>
                <h:panelGroup id="closeDateSpan" styleClass="indnt2 closeDateSpan calWidget" style="display: #{ForumTool.selectedForum.availabilityRestricted ? '' : 'none'}">
               		<h:outputLabel value="#{msgs.closeDate}: " for="closeDate" />
@@ -238,6 +266,20 @@
  		      	getval:'.closeDate',
  		      	useTime:1 
  		      });
+ 		      
+ 		     localDatePicker({
+  		      	input:'.unlockDate', 
+  		      	ashidden: { iso8601: 'unlockDateISO8601' },
+  		      	getval:'.unlockDate',
+  		      	useTime:1 
+  		      });
+
+  		      localDatePicker({
+  		      	input:'.unlockDate', 
+  		      	ashidden: { iso8601: 'unlockDateISO8601' },
+  		      	getval:'.unlockDate',
+  		      	useTime:1 
+  		      });
  		</script>
 
 

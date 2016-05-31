@@ -23,6 +23,10 @@ package org.sakaiproject.api.app.messageforums;
 
 public interface OpenTopic extends Topic {
 
+    public Boolean getHide();
+    
+    public void setHide(Boolean h);
+	
     public Boolean getLocked();
 
     public void setLocked(Boolean locked);

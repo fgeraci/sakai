@@ -63,6 +63,8 @@ public class DiscussionForumBean
   private ArrayList decoAttachList = null;
   private Boolean hasExtendedDescription = null;
   private String locked;
+  private String hide;
+  private String timedLock;
   
   private SimpleDateFormat datetimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
   
@@ -181,6 +183,80 @@ public class DiscussionForumBean
   }
   
   /**
+   * @return Returns the hide as String.
+   */
+  public String getHide()
+  {
+	  LOG.debug("getHide()");
+	  if (hide == null || "".equals(hide)){
+		  if (forum == null || forum.getHide() == null
+				  || forum.getHide().booleanValue() == false)
+		  {
+			  hide = Boolean.FALSE.toString();
+		  }
+		  else
+		  {
+			  hide = Boolean.TRUE.toString();
+		  }
+	  }
+	  return hide;
+  }
+
+  /**
+   * @param String hide
+   *          The locked to set.
+   */
+  public void setHide(String hide)
+  {
+	  LOG.debug("setHide(String"+ hide+")");
+	  if (hide.equals(Boolean.TRUE.toString()))
+	  {
+		  forum.setHide(Boolean.valueOf(true));
+	  }
+	  else
+	  {
+		  forum.setHide(Boolean.valueOf(false));
+	  }
+  }
+  
+  /**
+   * @return Returns the hide as String.
+   */
+  public String getTimedLock()
+  {
+	  LOG.debug("getTimedLock()");
+	  if (timedLock == null || "".equals(timedLock)){
+		  if (forum == null || forum.getTimedLock() == null
+				  || forum.getTimedLock().booleanValue() == false)
+		  {
+			  timedLock = Boolean.FALSE.toString();
+		  }
+		  else
+		  {
+			  timedLock = Boolean.TRUE.toString();
+		  }
+	  }
+	  return timedLock;
+  }
+
+  /**
+   * @param String hide
+   *          The locked to set.
+   */
+  public void setTimedLock(String timedLock)
+  {
+	  LOG.debug("setTimedLock(String"+ timedLock+")");
+	  if (timedLock.equals(Boolean.TRUE.toString()))
+	  {
+		  forum.setTimedLock(Boolean.valueOf(true));
+	  }
+	  else
+	  {
+		  forum.setTimedLock(Boolean.valueOf(false));
+	  }
+  }
+  
+  /**
    * @return Returns the locked as boolean
    */
   public Boolean getForumLocked()
@@ -208,6 +284,36 @@ public class DiscussionForumBean
   {
     LOG.debug("setForumLocked(String"+ locked+")");
     forum.setLocked(locked);
+  }
+  
+  /**
+   * @return Returns the locked as boolean
+   */
+  public Boolean getForumHide()
+  {
+    LOG.debug("getForumHide()");
+    if (hide == null || "".equals(hide)){
+	    if (forum == null || forum.getHide() == null
+	        || forum.getHide().booleanValue() == false)
+	    {
+	      hide = Boolean.FALSE.toString();
+	    }
+	    else
+	    {
+	    	hide = Boolean.TRUE.toString();
+	    }
+    }
+    return Boolean.parseBoolean(hide);
+  }
+
+  /**
+   * @param Boolean locked
+   *          The locked to set.
+   */
+  public void setForumHide(Boolean hide)
+  {
+    LOG.debug("setForumHide(String"+ hide+")");
+    forum.setHide(hide);
   }
   
   private String moderated = null;
@@ -682,7 +788,7 @@ public class DiscussionForumBean
 			return dateTimeOpenDate.toString();
 		}
 	}	  
-
+	
 	public void setOpenDate(String openDateStr){
 		if (StringUtils.isNotBlank(openDateStr)) {
 			try{
@@ -694,6 +800,52 @@ public class DiscussionForumBean
 			}
 		}else{
 			forum.setOpenDate(null);
+		}
+	}
+	
+	public String getUnlockDate(){
+		if(forum == null || forum.getUnlockDate() == null){
+			return "";
+		}else{
+			StringBuilder dateTimeUnlockDate = new StringBuilder( datetimeFormat.format( forum.getUnlockDate() ) );			
+			return dateTimeUnlockDate.toString();
+		}
+	}
+	
+	public void setUnlockDate(String unlockDateStr){
+		if (StringUtils.isNotBlank(unlockDateStr)) {
+			try{
+				String hiddenUnlockDate = (String)FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("unlockDateISO8601");
+				Date unlockDate = (Date) datetimeFormat.parse(hiddenUnlockDate);
+				forum.setUnlockDate(unlockDate);
+			}catch (ParseException e) {
+				LOG.error("Couldn't convert open date", e);
+			}
+		}else{
+			forum.setUnlockDate(null);
+		}
+	}
+	
+	public String getLockDate(){
+		if(forum == null || forum.getLockDate() == null){
+			return "";
+		}else{
+			StringBuilder dateTimeLockDate = new StringBuilder( datetimeFormat.format( forum.getLockDate() ) );			
+			return dateTimeLockDate.toString();
+		}
+	}
+	
+	public void setLockDate(String lockDateStr){
+		if (StringUtils.isNotBlank(lockDateStr)) {
+			try{
+				String hiddenLockDate = (String)FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("lockDateISO8601");
+				Date lockDate = (Date) datetimeFormat.parse(hiddenLockDate);
+				forum.setLockDate(lockDate);
+			}catch (ParseException e) {
+				LOG.error("Couldn't convert open date", e);
+			}
+		}else{
+			forum.setLockDate(null);
 		}
 	}
 

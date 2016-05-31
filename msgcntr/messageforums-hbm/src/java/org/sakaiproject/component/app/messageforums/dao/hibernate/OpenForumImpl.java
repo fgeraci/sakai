@@ -33,10 +33,14 @@ public class OpenForumImpl extends BaseForumImpl implements OpenForum {
     
     private Boolean draft;
     private Boolean locked;
+    private Boolean timedLock = false;
+    private Boolean hide = false;
     private String defaultAssignName;
     private DBMembershipItem membershipItem;
     private Date openDate;
     private Date closeDate;
+    private Date lockDate;
+    private Date unlockDate;
     /**
      * availabilityRestricted: this is the radio button the users turns on or off this feature with
      */
@@ -125,5 +129,49 @@ public class OpenForumImpl extends BaseForumImpl implements OpenForum {
 
 	public void setAvailability(Boolean availability) {
 		this.availability = availability;
+	}
+
+	@Override
+	public Boolean getHide() {
+		return hide;
+	}
+	
+	@Override
+	public void setHide(Boolean hide) {
+		this.hide = hide;
+	}
+	
+	@Override
+	public Boolean getTimedLock() {
+		return timedLock;
+	}
+	
+	@Override
+	public void setTimedLock(Boolean timedLock) {
+		this.timedLock = timedLock;
+	}
+
+	@Override
+	public void setLockDate(Date lockDate) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setUnlockDate(Date lockDate) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Date getLockDate() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Date getUnlockDate() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
