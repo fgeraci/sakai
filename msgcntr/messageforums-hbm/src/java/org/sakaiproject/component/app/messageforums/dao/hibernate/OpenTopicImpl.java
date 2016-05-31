@@ -30,6 +30,7 @@ public class OpenTopicImpl extends TopicImpl implements OpenTopic {
     
     private Boolean locked;
     private Boolean draft; 
+    private Boolean hide = false;
     
     public Boolean getLocked() {
         return locked;
@@ -46,5 +47,15 @@ public class OpenTopicImpl extends TopicImpl implements OpenTopic {
     public void setDraft(Boolean draft) {
         this.draft = draft;
     }
+
+	@Override
+	public Boolean getHide() {
+		return hide;
+	}
+
+	@Override
+	public void setHide(Boolean hide) {
+		this.hide = hide;
+	}
 
 }

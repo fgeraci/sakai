@@ -81,6 +81,7 @@ public class DiscussionTopicBean
   private Boolean isNewResponseToResponse = null;
   private Boolean postToGradebook = null;
   private String locked = "";
+  private String hide = "";
   private String moderated = "";
   private String postFirst = "";
   private String postAnonymous = "";
@@ -386,6 +387,43 @@ public class DiscussionTopicBean
   }
   
   /**
+   * @return Returns the hide as String.
+   */
+  public String getHide()
+  {
+	  LOG.debug("getHide()");
+	  if (hide == null || "".equals(hide)){
+		  if (topic == null || topic.getHide() == null
+				  || topic.getHide().booleanValue() == false)
+		  {
+			  hide = Boolean.FALSE.toString();
+		  }
+		  else
+		  {
+			  hide = Boolean.TRUE.toString();
+		  }
+	  }
+	  return hide;
+  }
+
+  /**
+   * @param String hide
+   *          The locked to set.
+   */
+  public void setHide(String hide)
+  {
+	  LOG.debug("setHide(String"+ hide+")");
+	  if (hide.equals(Boolean.TRUE.toString()))
+	  {
+		  topic.setHide(Boolean.valueOf(true));
+	  }
+	  else
+	  {
+		  topic.setHide(Boolean.valueOf(false));
+	  }
+  }
+  
+  /**
    * @return Returns the boolean value of locked.
    */
   public Boolean getTopicLocked()
@@ -416,6 +454,36 @@ public class DiscussionTopicBean
        LOG.debug("setTopicLocked(String "+ locked+")");
     }
     topic.setLocked(locked);
+  }
+  
+  /**
+   * @return Returns the locked as boolean
+   */
+  public Boolean getTopicHide()
+  {
+    LOG.debug("getTopicHide()");
+    if (hide == null || "".equals(hide)){
+	    if (topic == null || topic.getHide() == null
+	        || topic.getHide().booleanValue() == false)
+	    {
+	      hide = Boolean.FALSE.toString();
+	    }
+	    else
+	    {
+	    	hide = Boolean.TRUE.toString();
+	    }
+    }
+    return Boolean.parseBoolean(hide);
+  }
+
+  /**
+   * @param Boolean locked
+   *          The locked to set.
+   */
+  public void setTopicHide(Boolean hide)
+  {
+    LOG.debug("setTopicHide(String"+ hide+")");
+    topic.setHide(hide);
   }
   
   

@@ -236,6 +236,8 @@ public class DiscussionForumTool
   private static final String INSUFFICIENT_PRIVILEGES_NEW_TOPIC = "cdfm_insufficient_privileges_new_topic";
   private static final String INSUFFICIENT_PRIVILEGES_CREATE_TOPIC="cdfm_insufficient_privileges_create_topic";
   private static final String FORUM_LOCKED = "cdfm_forum_locked";
+  private static final String FORUM_TIMED_LOCK = "cdfm_timed_lock";
+  private static final String FORUM_HIDE = "cdfm_hide_locked";
   private static final String TOPIC_LOCKED = "cdfm_topic_locked";
   private static final String ERROR_POSTING_THREAD = "cdfm_error_posting_thread";
   private static final String USER_NOT_ALLOWED_CREATE_FORUM="cdfm_user_not_allowed_create_forum";

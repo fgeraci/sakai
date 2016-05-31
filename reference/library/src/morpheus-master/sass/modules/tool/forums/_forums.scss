@@ -185,6 +185,11 @@
 					padding-left: 0;
 				}
 			}
+			&.sub {
+				display: none;
+				margin-left: 1em;
+				font-size: 90%;
+			}
 		}
 		.act{
 			margin: 1em 0 0 0;

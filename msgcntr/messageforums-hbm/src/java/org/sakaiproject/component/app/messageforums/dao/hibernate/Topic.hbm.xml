@@ -153,6 +153,9 @@
         discriminator-value="OT">
       <property name="locked">
         <column name="LOCKED" not-null="false" />
+      </property>
+      <property name="hide">
+        <column name="HIDE" not-null="false" />
       </property>      
       <property name="draft">
         <column name="DRAFT" not-null="false" />

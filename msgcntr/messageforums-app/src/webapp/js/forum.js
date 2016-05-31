@@ -885,5 +885,14 @@ $(document).ready(function(){
         });
         $buttonContainer.find('.messageProgress').fadeIn('slow')
     });
-
+    
+    // handle sub checkboxes
+    $('.checkbox').on('click',function() {
+    	if($('> input[type=checkbox]',this).is(':checked')) {
+            $('.sub',this).each(function(){$(this).css('display','block');});
+        } else $('.sub',this).each(function(){
+            $(this).css('display','none');
+            $('input[type=checkbox]',this).prop('checked',false);
+        });
+    });
 });

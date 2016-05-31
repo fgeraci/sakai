@@ -25,7 +25,11 @@ import java.util.Date;
 
 public interface OpenForum extends BaseForum {
 
-    public Boolean getLocked();
+    public Boolean getHide();
+    
+    public void setHide(Boolean h);
+	
+	public Boolean getLocked();
 
     public void setLocked(Boolean locked);
 
@@ -46,6 +50,18 @@ public interface OpenForum extends BaseForum {
 	public void setOpenDate(Date openDate);
 	
     public Date getCloseDate();
+    
+    public void setTimedLock(Boolean timedLock);
+    
+    public Boolean getTimedLock();
+    
+    public void setLockDate(Date lockDate);
+    
+    public void setUnlockDate(Date lockDate);
+    
+    public Date getLockDate();
+    
+    public Date getUnlockDate();
     
 	public void setCloseDate(Date closeDate);
 	

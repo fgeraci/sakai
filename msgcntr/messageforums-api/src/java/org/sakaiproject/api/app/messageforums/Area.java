@@ -163,4 +163,8 @@ public interface Area extends MutableEntity {
     public Set getHiddenGroups();
        
     public void setHiddenGroups(Set hiddenGroups);
+    
+    public void setHide(Boolean hide);
+    
+    public Boolean getHide();
 }

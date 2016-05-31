@@ -82,6 +82,12 @@
     <property name="locked">
       <column name="LOCKED" not-null="true" />
     </property>
+     <property name="hide">
+      <column name="HIDE" not-null="true" />
+    </property>
+    <property name="timedLock">
+      <column name="TIMED_LOCK" not-null="true" />
+    </property>
     <property name="draft">
       <column name="DRAFT" not-null="false" />
     </property>    
@@ -93,7 +99,9 @@
       <column name="AVAILABILITY" not-null="true" default="1" />
     </property>
     <property name="openDate" column="OPEN_DATE" type="timestamp" />
-    <property name="closeDate" column="CLOSE_DATE" type="timestamp" />  
+    <property name="closeDate" column="CLOSE_DATE" type="timestamp" />
+    <property name="lockDate" column="LOCK_DATE" type="timestamp" />
+    <property name="unlockDate" column="UNLOCK_DATE" type="timestamp" />  
 
     <many-to-one name="area" column="surrogateKey"
       class="org.sakaiproject.component.app.messageforums.dao.hibernate.AreaImpl"
@@ -181,6 +189,12 @@
 
   <query name="findTopicLockedAttribute">
     <![CDATA[select t.locked from org.sakaiproject.component.app.messageforums.dao.hibernate.OpenTopicImpl as t
+                           where t.id = :id
+    ]]>
+  </query> 
+  
+   <query name="findTopicHideAttribute">
+    <![CDATA[select t.hide from org.sakaiproject.component.app.messageforums.dao.hibernate.OpenTopicImpl as t
                            where t.id = :id
     ]]>
   </query>  
