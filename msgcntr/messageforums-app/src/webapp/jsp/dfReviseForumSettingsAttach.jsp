@@ -188,10 +188,10 @@
 			
 				<p class="checkbox">
 				<h:panelGroup>
-				<h:selectBooleanCheckbox
-					title="ForumLocked" value="#{ForumTool.selectedForum.forumLocked}"
-					id="forum_locked">
-				</h:selectBooleanCheckbox> <h:outputLabel for="forum_locked" value="#{msgs.cdfm_lock_forum}" />
+					<h:selectBooleanCheckbox
+						title="ForumLocked" value="#{ForumTool.selectedForum.forumLocked}"
+						id="forum_locked">
+					</h:selectBooleanCheckbox> <h:outputLabel for="forum_locked" value="#{msgs.cdfm_lock_forum}" />
 					<h:panelGroup styleClass="checkbox sub">
 						<h:selectBooleanCheckbox
 							title="EnableForumLockDates" value="#{ForumTool.selectedForum.timedLock}"
@@ -199,20 +199,20 @@
 						</h:selectBooleanCheckbox> <h:outputLabel for="forum_locked" value="#{msgs.cdfm_timed_lock}" />
 						<h:panelGroup id="lockDateSpan" styleClass="checkbox indnt2">
 		               	    <h:outputLabel value="#{msgs.lockDate}: " for="lockDate"/>
-			                <h:inputText id="lockDate" styleClass="openDate" value="#{ForumTool.selectedForum.lockDate}"/>							
+			                <h:inputText id="lockDate" styleClass="lockDate" value="#{ForumTool.selectedForum.lockDate}"/>							
 						</h:panelGroup>
 						<h:panelGroup id="unlockDateSpan" styleClass="checkbox indnt2">
 		               	    <h:outputLabel value="#{msgs.unlockDate}: " for="unlockDate"/>
-			                <h:inputText id="unlockDate" styleClass="openDate" value="#{ForumTool.selectedForum.unlockDate}"/>							
+			                <h:inputText id="unlockDate" styleClass="unlockDate" value="#{ForumTool.selectedForum.unlockDate}"/>							
 						</h:panelGroup>
 					</h:panelGroup>
 				</h:panelGroup>
 				</p>
-				<p>
-				<h:selectBooleanCheckbox
-				title="ForumHide" value="#{ForumTool.selectedForum.forumHide}"
-				id="forum_hide">
-				</h:selectBooleanCheckbox> <h:outputLabel for="forum_hide" value="#{msgs.cdfm_hide_forum}" />
+				<p class="checkbox">
+					<h:selectBooleanCheckbox
+					title="ForumHide" value="#{ForumTool.selectedForum.forumHide}"
+					id="forum_hide">
+					</h:selectBooleanCheckbox> <h:outputLabel for="forum_hide" value="#{msgs.cdfm_hide_forum}" />
 				</p>
 				<p class="checkbox">
 					<h:selectBooleanCheckbox
@@ -275,9 +275,9 @@
   		      });
 
   		      localDatePicker({
-  		      	input:'.unlockDate', 
-  		      	ashidden: { iso8601: 'unlockDateISO8601' },
-  		      	getval:'.unlockDate',
+  		      	input:'.lockDate', 
+  		      	ashidden: { iso8601: 'lockDateISO8601' },
+  		      	getval:'.lockDate',
   		      	useTime:1 
   		      });
  		</script>

@@ -886,13 +886,20 @@ $(document).ready(function(){
         $buttonContainer.find('.messageProgress').fadeIn('slow')
     });
     
-    // handle sub checkboxes
-    $('.checkbox').on('click',function() {
-    	if($('> input[type=checkbox]',this).is(':checked')) {
+    // Handle nested checkboxes
+    $('.checkbox').each(function() {
+    	$(this).on('click',function(){
+    		if($('> input[type=checkbox]',this).is(':checked')) {
+    			$('.sub',this).each(function(){$(this).css('display','block');});
+    		} else $('.sub',this).each(function(){
+    			$(this).css('display','none');
+    			$('input[type=checkbox]',this).prop('checked',false);
+    		});
+    	});
+        var e = $('> input[type=checkbox]',this);
+    	if($('> input[type=checkbox]:nth-child(1)',this).is(':checked')) {
             $('.sub',this).each(function(){$(this).css('display','block');});
-        } else $('.sub',this).each(function(){
-            $(this).css('display','none');
-            $('input[type=checkbox]',this).prop('checked',false);
-        });
+        }
     });
+    
 });

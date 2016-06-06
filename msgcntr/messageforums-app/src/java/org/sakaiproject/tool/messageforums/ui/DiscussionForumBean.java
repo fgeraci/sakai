@@ -148,21 +148,9 @@ public class DiscussionForumBean
   /**
    * @return Returns the locked as String.
    */
-  public String getLocked()
+  public Boolean getLocked()
   {
-    LOG.debug("getLocked()");
-    if (locked == null || "".equals(locked)){
-	    if (forum == null || forum.getLocked() == null
-	        || forum.getLocked().booleanValue() == false)
-	    {
-	      locked = Boolean.FALSE.toString();
-	    }
-	    else
-	    {
-	    	locked = Boolean.TRUE.toString();
-	    }
-    }
-    return locked;
+    return forum.getLocked() == null ? Boolean.FALSE : Boolean.valueOf(forum.getLocked());
   }
 
   /**
@@ -171,89 +159,42 @@ public class DiscussionForumBean
    */
   public void setLocked(String locked)
   {
-    LOG.debug("setLocked(String"+ locked+")");
-    if (locked.equals(Boolean.TRUE.toString()))
-    {
-      forum.setLocked(Boolean.valueOf(true));
-    }
-    else
-    {
-      forum.setLocked(Boolean.valueOf(false));
-    }
+    forum.setLocked(locked == null ? Boolean.FALSE : Boolean.valueOf(locked));
   }
   
   /**
    * @return Returns the hide as String.
    */
-  public String getHide()
+  public Boolean getHideForum()
   {
-	  LOG.debug("getHide()");
-	  if (hide == null || "".equals(hide)){
-		  if (forum == null || forum.getHide() == null
-				  || forum.getHide().booleanValue() == false)
-		  {
-			  hide = Boolean.FALSE.toString();
-		  }
-		  else
-		  {
-			  hide = Boolean.TRUE.toString();
-		  }
-	  }
-	  return hide;
+	  return forum.getHide() == null ? Boolean.FALSE : Boolean.valueOf(forum.getHide());
+  }
+
+  /**
+   * @param String hide
+   *          The hide to set.
+   */
+  public void setHideForum(String hide)
+  {
+	  forum.setHide(hide == null ? Boolean.FALSE : Boolean.valueOf(hide));
+  }
+  
+  /**
+   * @return Returns the lock as String.
+   */
+  public Boolean getTimedLock()
+  {
+	  return forum.getTimedLock() == null ? Boolean.FALSE : forum.getTimedLock();
   }
 
   /**
    * @param String hide
    *          The locked to set.
    */
-  public void setHide(String hide)
+  public void setTimedLock(Boolean timedLock)
   {
-	  LOG.debug("setHide(String"+ hide+")");
-	  if (hide.equals(Boolean.TRUE.toString()))
-	  {
-		  forum.setHide(Boolean.valueOf(true));
-	  }
-	  else
-	  {
-		  forum.setHide(Boolean.valueOf(false));
-	  }
-  }
-  
-  /**
-   * @return Returns the hide as String.
-   */
-  public String getTimedLock()
-  {
-	  LOG.debug("getTimedLock()");
-	  if (timedLock == null || "".equals(timedLock)){
-		  if (forum == null || forum.getTimedLock() == null
-				  || forum.getTimedLock().booleanValue() == false)
-		  {
-			  timedLock = Boolean.FALSE.toString();
-		  }
-		  else
-		  {
-			  timedLock = Boolean.TRUE.toString();
-		  }
-	  }
-	  return timedLock;
-  }
-
-  /**
-   * @param String hide
-   *          The locked to set.
-   */
-  public void setTimedLock(String timedLock)
-  {
-	  LOG.debug("setTimedLock(String"+ timedLock+")");
-	  if (timedLock.equals(Boolean.TRUE.toString()))
-	  {
-		  forum.setTimedLock(Boolean.valueOf(true));
-	  }
-	  else
-	  {
-		  forum.setTimedLock(Boolean.valueOf(false));
-	  }
+	  boolean tl = timedLock == null ? Boolean.FALSE : Boolean.valueOf(timedLock);
+	  forum.setTimedLock(tl);
   }
   
   /**
@@ -261,19 +202,7 @@ public class DiscussionForumBean
    */
   public Boolean getForumLocked()
   {
-    LOG.debug("getForumLocked()");
-    if (locked == null || "".equals(locked)){
-	    if (forum == null || forum.getLocked() == null
-	        || forum.getLocked().booleanValue() == false)
-	    {
-	      locked = Boolean.FALSE.toString();
-	    }
-	    else
-	    {
-	    	locked = Boolean.TRUE.toString();
-	    }
-    }
-    return Boolean.parseBoolean(locked);
+    return forum.getLocked() == null ? Boolean.FALSE : forum.getLocked();
   }
 
   /**
@@ -282,38 +211,24 @@ public class DiscussionForumBean
    */
   public void setForumLocked(Boolean locked)
   {
-    LOG.debug("setForumLocked(String"+ locked+")");
-    forum.setLocked(locked);
+    boolean l = (locked == null) ? Boolean.FALSE : Boolean.valueOf(locked);
+    forum.setLocked(l);
   }
   
   /**
-   * @return Returns the locked as boolean
+   * @return Returns the hide as boolean
    */
-  public Boolean getForumHide()
-  {
-    LOG.debug("getForumHide()");
-    if (hide == null || "".equals(hide)){
-	    if (forum == null || forum.getHide() == null
-	        || forum.getHide().booleanValue() == false)
-	    {
-	      hide = Boolean.FALSE.toString();
-	    }
-	    else
-	    {
-	    	hide = Boolean.TRUE.toString();
-	    }
-    }
-    return Boolean.parseBoolean(hide);
+  public Boolean getForumHide() {
+    return forum.getHide() == null ? Boolean.FALSE : forum.getHide();
   }
 
   /**
-   * @param Boolean locked
-   *          The locked to set.
+   * @param Boolean hide
+   *          The hide to set.
    */
-  public void setForumHide(Boolean hide)
-  {
-    LOG.debug("setForumHide(String"+ hide+")");
-    forum.setHide(hide);
+  public void setForumHide(Boolean hide) {
+	  boolean h = (hide == null) ? Boolean.FALSE : Boolean.valueOf(hide);
+	  forum.setHide(h);
   }
   
   private String moderated = null;
@@ -808,7 +723,7 @@ public class DiscussionForumBean
 			return "";
 		}else{
 			StringBuilder dateTimeUnlockDate = new StringBuilder( datetimeFormat.format( forum.getUnlockDate() ) );			
-			return dateTimeUnlockDate.toString();
+			return String.valueOf(forum.getUnlockDate());
 		}
 	}
 	
@@ -831,7 +746,7 @@ public class DiscussionForumBean
 			return "";
 		}else{
 			StringBuilder dateTimeLockDate = new StringBuilder( datetimeFormat.format( forum.getLockDate() ) );			
-			return dateTimeLockDate.toString();
+			return String.valueOf(forum.getLockDate());
 		}
 	}
 	
