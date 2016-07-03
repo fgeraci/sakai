@@ -72,6 +72,9 @@ body.#{$namespace}toolMenu-collapsed{
 }
 
 #toolMenuWrap{
+	#toolMenu {
+		position: relative;
+	}
 	background: $tool-menu-background-color;
 	display: block;
 	min-width: $tool-menu-width;
@@ -234,7 +237,6 @@ nav#subSites{
 				}
 				.#{$namespace}toolsNav__menuitem--title{
 					display: block;
-					max-width: 100%;
 					width: 100%;
 					text-overflow: ellipsis;
 					white-space: pre;

@@ -31,10 +31,34 @@ $PBJQ(".js-toggle-nav").on("click", toggleMinimizeNav);
 
 var collapsed = false;
 
+var $window = $PBJQ(window),
+	$tools	= $("#toolMenu"),
+	$bread = $(".Mrphs-siteHierarchy"),
+	padding	= $bread.height() 
+		+ getNumPart($bread.css('padding-top'))
+		+ getNumPart($bread.css('padding-bottom'))
+		+ $(".Mrphs-topHeader").height();
+
 $PBJQ(document).ready(function(){
 	if(getCookieVal('sakai_nav_minimized') === 'true') {
 		$PBJQ(".js-toggle-nav").click();
 		collapsed = true;
+	}
+});
+
+$PBJQ(window).scroll(function(){
+	var topPad = $(".pasystem-banner-alerts").height();
+	var follow = ($window.height()- (padding + topPad)) > $tools.height() 
+					&& ($window.scrollTop() > padding);
+	if($("#toolMenuWrap").css('position') !== 'fixed'
+		&& follow && $window.scrollTop() > 0) {
+		$("#toolMenu").stop().animate({
+            top: $window.scrollTop() + topPad - padding
+        });
+	} else {
+		$("#toolMenu").stop().animate({
+			top: 0
+	    });
 	}
 });
 
@@ -46,5 +70,13 @@ function getCookieVal(cookieName) {
 			return ((cks[i].split('='))[1]).trim();;
 		}
 	}
-	return undefined;
+	return 'false';
+}
+
+function getNumPart(val) {
+	for(var i = val.length - 1; i >= 0; i--) {
+		if(!isNaN(Number(val.charAt(i)))) {
+			return Number(val.substring(0,i+1));
+		}
+	}
 }
