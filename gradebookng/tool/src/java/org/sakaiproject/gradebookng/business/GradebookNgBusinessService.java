@@ -418,13 +418,13 @@ public class GradebookNgBusinessService {
 	 * 		TODO make the concurrency check a boolean instead of the null oldGrade
 	 */
 	public GradeSaveResponse saveGrade(final Long assignmentId, final String studentUuid, final String oldGrade,
-			final String newGrade, final String comment) {
+			String newGrade, final String comment) {
 
 		final Gradebook gradebook = this.getGradebook();
 		if (gradebook == null) {
 			return GradeSaveResponse.ERROR;
 		}
-
+		
 		//if newGrade is null, no change
 		if(newGrade == null) {
 			return GradeSaveResponse.NO_CHANGE;
@@ -440,13 +440,25 @@ public class GradebookNgBusinessService {
 
 		// check what grading mode we are in
 		final GbGradingType gradingType = GbGradingType.valueOf(gradebook.getGrade_type());
-
+		boolean isLetterGraded = (gradingType == GbGradingType.LETTER);
+		
 		// if percentage entry type, reformat the grades, otherwise use points as is
-		String newGradeAdjusted = newGrade;
 		String oldGradeAdjusted = oldGrade;
+		String newGradeAdjusted = newGrade;
 		String storedGradeAdjusted = storedGrade;
-
-		if (gradingType == GbGradingType.PERCENTAGE) {
+		
+		if(isLetterGraded) {
+			Double val = NumberUtils.toDouble(newGrade);
+			Map<String,Double> map = getGradingSchema();
+			newGradeAdjusted = FormatHelper.formatDoubleAsLetterGrade(val, map);
+			storedGradeAdjusted = FormatHelper.formatDoubleAsLetterGrade((NumberUtils.toDouble(storedGrade)/maxPoints)*100.00, 
+					map);
+			newGrade = FormatHelper.formatDoubleAsLetterGrade(Double.valueOf(newGrade), map);
+			if(NumberUtils.isDigits(oldGradeAdjusted)) {
+				oldGradeAdjusted = FormatHelper.formatDoubleAsLetterGrade(NumberUtils.toDouble(oldGradeAdjusted), map);
+			}
+		} else if (gradingType == GbGradingType.PERCENTAGE) {
+			
 			// the passed in grades represents a percentage so the number needs to be adjusted back to points
 			final Double newGradePercentage = NumberUtils.toDouble(newGrade);
 			final Double newGradePointsFromPercentage = (newGradePercentage / 100) * maxPoints;
@@ -465,9 +477,11 @@ public class GradebookNgBusinessService {
 		// trim the .0 from the grades if present. UI removes it so lets standardise
 		// trim to null so we can better compare against no previous grade being recorded (as it will be null)
 		// Note that we also trim newGrade so that don't add the grade if the new grade is blank and there was no grade previously
-		storedGradeAdjusted = StringUtils.trimToNull(StringUtils.removeEnd(storedGradeAdjusted, ".0"));
-		oldGradeAdjusted = StringUtils.trimToNull(StringUtils.removeEnd(oldGradeAdjusted, ".0"));
-		newGradeAdjusted = StringUtils.trimToNull(StringUtils.removeEnd(newGradeAdjusted, ".0"));
+		if(!isLetterGraded) {
+			storedGradeAdjusted = StringUtils.trimToNull(StringUtils.removeEnd(storedGradeAdjusted, ".0"));
+			oldGradeAdjusted = StringUtils.trimToNull(StringUtils.removeEnd(oldGradeAdjusted, ".0"));
+			newGradeAdjusted = StringUtils.trimToNull(StringUtils.removeEnd(newGradeAdjusted, ".0"));
+		}
 
 		if (log.isDebugEnabled()) {
 			log.debug("storedGradeAdjusted: " + storedGradeAdjusted);
@@ -496,15 +510,14 @@ public class GradebookNgBusinessService {
 		// concurrency check, if stored grade != old grade that was passed in,
 		// someone else has edited.
 		// if oldGrade == null, ignore concurrency check
-		if (oldGrade != null && !StringUtils.equals(storedGradeAdjusted, oldGradeAdjusted)) {
+		if (!(StringUtils.isEmpty(oldGrade) || StringUtils.equals(storedGradeAdjusted, oldGradeAdjusted))) {
 			return GradeSaveResponse.CONCURRENT_EDIT;
 		}
 
 		GradeSaveResponse rval = null;
 
-		if (StringUtils.isNotBlank(newGradeAdjusted)) {
+		if (StringUtils.isNotBlank(newGradeAdjusted) && !isLetterGraded) {
 			final Double newGradePoints = NumberUtils.toDouble(newGradeAdjusted);
-
 			// if over limit, still save but return the warning
 			if (newGradePoints.compareTo(maxPoints) > 0) {
 				log.debug("over limit. Max: " + maxPoints);
@@ -775,7 +788,7 @@ public class GradebookNgBusinessService {
 					}
 
 					final Double categoryScore = this.gradebookService.calculateCategoryScore(gradebook,
-							student.getId(), category, assignments, gradeMap);
+							student.getId(), category, category.getAssignmentList(), gradeMap);
 
 					// add to GbStudentGradeInfo
 					sg.addCategoryAverage(category.getId(), categoryScore);
@@ -1825,6 +1838,24 @@ public class GradebookNgBusinessService {
 		final ResourceLoader rl = new ResourceLoader();
 		return rl.getLocale();
 	}
+	
+	/**
+	 * Retuns the currently set letter grading schema
+	 * @return Map of Letter,Score
+	 */
+	public Map<String, Double> getGradingSchema() {
+		return getGradebook(getCurrentSiteId()).getSelectedGradeMapping().getGradeMap();
+	}
+	
+	/**
+	 * Validates input in gradding cells
+	 * @param String input letter grade val
+	 * @return true is valid, false otherwise
+	 */
+	public boolean isLetterGradeValid(String val) {
+		final Map<String,Double> schema = getGradingSchema();
+		return (schema.get(val) != null);
+	} 
 
 	/**
 	 * Helper to check if a user is roleswapped

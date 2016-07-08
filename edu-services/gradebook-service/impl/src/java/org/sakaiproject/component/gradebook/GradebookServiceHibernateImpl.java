@@ -306,6 +306,7 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 						if (gradebook.getGrade_type() == GradebookService.GRADE_TYPE_LETTER) {
 							List<AssignmentGradeRecord> gradeList = new ArrayList<AssignmentGradeRecord>();
 							gradeList.add(gradeRecord);
+							
 							convertPointsToLetterGrade(gradebook, gradeList);
 							AssignmentGradeRecord gradeRec = (AssignmentGradeRecord)gradeList.get(0);
 							if (gradeRec != null) {
@@ -1010,7 +1011,9 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 	private double getTotalPointsInternal(final Gradebook gradebook, final List categories, final String studentId, List<AssignmentGradeRecord> studentGradeRecs, List<Assignment> countedAssigns, boolean literalTotal)
         {
             int gbGradeType = gradebook.getGrade_type();
-            if( gbGradeType != GradebookService.GRADE_TYPE_POINTS && gbGradeType != GradebookService.GRADE_TYPE_PERCENTAGE)
+            if( gbGradeType != GradebookService.GRADE_TYPE_POINTS 
+            		&& gbGradeType != GradebookService.GRADE_TYPE_PERCENTAGE
+            		&& gbGradeType != GradebookService.GRADE_TYPE_LETTER)
             {
                 if(log.isInfoEnabled()) log.error("Wrong grade type in GradebookCalculationImpl.getTotalPointsInternal");
                 return -1;
@@ -1125,7 +1128,9 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 	        final List<AssignmentGradeRecord> gradeRecs, List<Assignment> countedAssigns) 
 	{
 	    int gbGradeType = gradebook.getGrade_type();
-	    if( gbGradeType != GradebookService.GRADE_TYPE_POINTS && gbGradeType != GradebookService.GRADE_TYPE_PERCENTAGE)
+	    if( gbGradeType != GradebookService.GRADE_TYPE_POINTS 
+	    		&& gbGradeType != GradebookService.GRADE_TYPE_PERCENTAGE
+	    		&& gbGradeType != GradebookService.GRADE_TYPE_LETTER)
 	    {
 	        if(log.isInfoEnabled()) log.error("Wrong grade type in GradebookCalculationImpl.getTotalPointsEarnedInternal");
 	        return new ArrayList();
@@ -3050,7 +3055,7 @@ public class GradebookServiceHibernateImpl extends BaseHibernateManager implemen
 			if (gb.getGrade_type() == GradebookService.GRADE_TYPE_PERCENTAGE) {
 				grade = calculateEquivalentPointValueForPercent(pointsPossible, NumberUtils.createDouble(rawGrade));
 			} else if (gb.getGrade_type() == GradebookService.GRADE_TYPE_LETTER){
-				grade = gradingSchema.get(rawGrade);
+				grade = pointsPossible * ((rawGrade == null ? 0 : gradingSchema.get(rawGrade)) / 100.0); // TODO - trunk: gradingSchema.get(rawGrade); 
 			} else {
 				grade = NumberUtils.createDouble(rawGrade);
 			}

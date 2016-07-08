@@ -12,6 +12,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.sakaiproject.gradebookng.business.GradebookNgBusinessService;
 import org.sakaiproject.gradebookng.business.util.FormatHelper;
 import org.sakaiproject.gradebookng.tool.model.ScoreChangedEvent;
+import org.sakaiproject.service.gradebook.shared.GradebookService;
 
 /**
  *
@@ -40,13 +41,14 @@ public class CategoryColumnCellPanel extends Panel {
 
 		// unpack model
 		final Map<String, Object> modelData = this.model.getObject();
-
+		final int gradeType = this.businessService.getGradebookSettings().getGradeType();
+		final Map<String, Double> gradingSchema = this.businessService.getGradebook().getSelectedGradeMapping().getGradeMap();
 		final Double score = (Double) modelData.get("score");
 		final String studentUuid = (String) modelData.get("studentUuid");
 		final Long categoryId = (Long) modelData.get("categoryId");
 
 		// score label
-		final Label scoreLabel = new Label("score", Model.of(getCategoryScore(score))) {
+		final Label scoreLabel = new Label("score", Model.of(getCategoryScore(score,gradeType,gradingSchema))) {
 			@Override
 			public void onEvent(final IEvent<?> event) {
 				super.onEvent(event);
@@ -88,12 +90,20 @@ public class CategoryColumnCellPanel extends Panel {
 	 * @param score
 	 * @return 12.34% type string or N/A if null
 	 */
-	private String getCategoryScore(final Double score) {
-
-		if (score == null) {
+	private String getCategoryScore(final Double score, final int gradeType, final Map<String, Double> schema) {
+		if (score == null ||
+				(gradeType == GradebookService.GRADE_TYPE_LETTER && schema == null)) {
 			return getString("label.nocategoryscore");
 		}
-
-		return FormatHelper.formatDoubleAsPercentage(score);
+		String value = null;
+		switch(gradeType) {
+		case GradebookService.GRADE_TYPE_PERCENTAGE:
+		case GradebookService.GRADE_TYPE_POINTS:
+			value = FormatHelper.formatDoubleAsPercentage(score);
+			break;
+		case GradebookService.GRADE_TYPE_LETTER:
+			value = FormatHelper.formatDoubleAsLetterGrade(score,schema);
+		}
+		return (value == null ? getString("label.nocategoryscore") : value);
 	}
 }

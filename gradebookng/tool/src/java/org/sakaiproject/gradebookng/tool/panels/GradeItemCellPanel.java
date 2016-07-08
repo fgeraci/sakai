@@ -210,7 +210,10 @@ public class GradeItemCellPanel extends Panel {
 
 				@Override
 				protected void onUpdate(final AjaxRequestTarget target) {
-					final String rawGrade = GradeItemCellPanel.this.gradeCell.getValue();
+					String val = GradeItemCellPanel.this.gradeCell.getValue();
+					final String rawGrade = gradingType == GbGradingType.LETTER && businessService.isLetterGradeValid(val) ? 
+							String.valueOf(businessService.getGradingSchema().get(val)) :
+								val;
 					
 					final GradebookPage page = (GradebookPage) getPage();
 
@@ -218,7 +221,7 @@ public class GradeItemCellPanel extends Panel {
 
 					// perform validation here so we can bypass the backend
 					final DoubleValidator validator = new DoubleValidator();
-
+					
 					if (StringUtils.isNotBlank(rawGrade) && (!validator.isValid(rawGrade) || Double.parseDouble(rawGrade) < 0)) {
 						// show warning and revert button
 						markWarning(getComponent());
@@ -599,9 +602,13 @@ public class GradeItemCellPanel extends Panel {
 	private String formatDisplayGrade(String grade) {
 	
 		String rval = grade;
-		
-		if (this.gradingType == GbGradingType.PERCENTAGE && StringUtils.isNotBlank(grade)) {
-			rval += "%";
+		if(StringUtils.isNotBlank(grade)) {
+			if (this.gradingType == GbGradingType.PERCENTAGE) {
+				rval += "%";
+			} else if (gradingType == GbGradingType.LETTER && NumberUtils.isDigits(rval)) {
+				rval = FormatHelper.formatDoubleAsLetterGrade(NumberUtils.createDouble(rval), 
+						businessService.getGradingSchema());
+			}
 		}
 		return rval;
 	}

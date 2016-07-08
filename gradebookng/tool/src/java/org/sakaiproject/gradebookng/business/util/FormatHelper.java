@@ -6,9 +6,11 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.sakaiproject.tool.gradebook.LetterGradePercentMapping;
 
 @Slf4j
 public class FormatHelper {
@@ -131,5 +133,13 @@ public class FormatHelper {
 	 */
 	public static String abbreviateMiddle(final String s) {
 		return StringUtils.abbreviateMiddle(s, "...", 45);
+	}
+	
+	/**
+	 * Returns the corresponding Letter grade fo the provided score as
+	 * defined in the grading schema.
+	 */
+	public static String formatDoubleAsLetterGrade(final Double val, final Map<String, Double> schema) {
+		return LetterGradePercentMapping.getCustomGrade(val, schema);
 	}
 }

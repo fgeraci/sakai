@@ -765,29 +765,36 @@ public abstract class BaseHibernateManager extends HibernateDaoSupport {
     
     public LetterGradePercentMapping getLetterGradePercentMapping(final Gradebook gradebook)
     {
-    	HibernateCallback hc = new HibernateCallback() 
-    	{
-    		public Object doInHibernate(Session session) throws HibernateException 
-    		{
-    			LetterGradePercentMapping mapping = (LetterGradePercentMapping) ((session.createQuery(
-    			"from LetterGradePercentMapping as lgpm where lgpm.gradebookId=:gradebookId and lgpm.mappingType=2")).
-    			setLong("gradebookId", gradebook.getId().longValue())).
-    			uniqueResult();
-    			if(mapping == null ) 
-    			{
-    				LetterGradePercentMapping lgpm = getDefaultLetterGradePercentMapping();
-    				LetterGradePercentMapping returnLgpm = new LetterGradePercentMapping();
-    				returnLgpm.setGradebookId(gradebook.getId());
-    				returnLgpm.setGradeMap(lgpm.getGradeMap());
-    				returnLgpm.setMappingType(2);
-    				return returnLgpm;
-    			}
-    			return mapping;
-
-    		}
-    	};
-
-    	return (LetterGradePercentMapping) getHibernateTemplate().execute(hc);
+    	if(gradebook.getSelectedGradeMapping().getGradeMap() != null) {
+    		LetterGradePercentMapping selectedLgpm = new LetterGradePercentMapping();
+    		selectedLgpm.setGradebookId(gradebook.getId());
+    		selectedLgpm.setGradeMap( gradebook.getSelectedGradeMapping().getGradeMap());
+    		selectedLgpm.setMappingType(2);
+			return selectedLgpm;
+    	} else {
+	    	HibernateCallback hc = new HibernateCallback() 
+	    	{
+	    		public Object doInHibernate(Session session) throws HibernateException 
+	    		{
+	    			LetterGradePercentMapping mapping = (LetterGradePercentMapping) ((session.createQuery(
+	    			"from LetterGradePercentMapping as lgpm where lgpm.gradebookId=:gradebookId and lgpm.mappingType=2")).
+	    			setLong("gradebookId", gradebook.getId().longValue())).
+	    			uniqueResult();
+	    			LetterGradePercentMapping returnLgpm = new LetterGradePercentMapping();
+	    			if(mapping == null ) 
+	    			{
+	    				LetterGradePercentMapping lgpm = getDefaultLetterGradePercentMapping();
+	    				returnLgpm.setGradebookId(gradebook.getId());
+	    				Map<String,Double> selectedMap = gradebook.getSelectedGradeMapping().getGradeMap();  
+	    				returnLgpm.setGradeMap(lgpm.getGradeMap());
+	    				returnLgpm.setMappingType(2);
+	    				return returnLgpm;
+	    			}
+	    			return mapping;
+	    		}
+	    	};
+	    	return (LetterGradePercentMapping) getHibernateTemplate().execute(hc);
+    	}
     }
     
     /**
@@ -1359,6 +1366,7 @@ public abstract class BaseHibernateManager extends HibernateDaoSupport {
      * Converts points to letter grade for the given AssignmentGradeRecords
      * @param gradebook
      * @param studentRecordsFromDB
+     * @param use currently selected schema
      * @return
      */
     protected List convertPointsToLetterGrade(Gradebook gradebook, List studentRecordsFromDB)
@@ -1376,7 +1384,9 @@ public abstract class BaseHibernateManager extends HibernateDaoSupport {
     				agr.setLetterEarned(null);
         			letterGradeList.add(agr);
     			} else {
-    				String letterGrade = lgpm.getGrade(calculateEquivalentPercent(pointsPossible, agr.getPointsEarned()));
+    				String letterGrade = null;
+    				Double pts = calculateEquivalentPercent(pointsPossible, agr.getPointsEarned());
+    				letterGrade = lgpm.getGrade(pts);
         			agr.setLetterEarned(letterGrade);
         			letterGradeList.add(agr);
     			}

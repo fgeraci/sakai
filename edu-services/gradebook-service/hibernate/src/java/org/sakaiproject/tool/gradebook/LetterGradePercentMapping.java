@@ -46,7 +46,27 @@ public class LetterGradePercentMapping implements Serializable
 			return getGradeMapping(((Double)percentList.get(percentList.size() - 1)));
 		}
 		return null;
-	}	
+	}
+	
+	/**
+	 * Returns the corresponding Letter grade fo the provided score as
+	 * defined in the grading schema.
+	 */
+	public static String getCustomGrade(final Double val, final Map<String, Double> schema) {
+		if(val == null || schema == null) {
+			return null;
+		}
+		double maxSoFar = -1;
+		String letterGrade = "";
+		for(String s : schema.keySet()) {
+			double curVal = schema.get(s);
+			if(val >= curVal && curVal > maxSoFar) {
+				letterGrade = s;
+				maxSoFar = curVal;
+			}
+		}
+		return letterGrade;
+	}
 	
 	/*
 	 * this method returns the mapping letter grade value for Double value
